@@ -10,51 +10,59 @@
             --bg: #0f172a;
             --card: #1e293b;
             --accent: #3b82f6;
-            --accent-hover: #2563eb;
             --green: #10b981;
             --red: #ef4444;
             --text: #f8fafc;
             --muted: #94a3b8;
         }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; user-select: none; }
-        body { margin: 0; padding: 16px; background: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; }
+        body { margin: 0; padding: 14px; background: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; }
         
-        /* Верхняя панель */
-        .header { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 12px 16px; border-radius: 16px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .header { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 12px 16px; border-radius: 16px; margin-bottom: 14px; }
         .balance-box { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 700; }
         .coin { background: #f59e0b; color: #000; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; }
         .bonus-btn { background: rgba(16, 185, 129, 0.15); color: var(--green); border: 1px solid var(--green); padding: 6px 12px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; }
         .bonus-btn:active { transform: scale(0.95); }
 
-        /* Меню выбора игр */
-        .nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
-        .nav-btn { background: var(--card); border: 2px solid transparent; color: var(--muted); padding: 10px 4px; border-radius: 12px; font-size: 12px; font-weight: 600; text-align: center; cursor: pointer; transition: 0.2s; }
-        .nav-btn.active { border-color: var(--accent); color: var(--text); background: rgba(59, 130, 246, 0.1); }
+        .nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+        .nav-btn { background: var(--card); border: 2px solid transparent; color: var(--muted); padding: 10px 4px; border-radius: 12px; font-size: 12px; font-weight: 600; text-align: center; cursor: pointer; }
+        .nav-btn.active { border-color: var(--accent); color: var(--text); background: rgba(59, 130, 246, 0.15); }
         .nav-icon { font-size: 20px; display: block; margin-bottom: 4px; }
 
-        /* Игровая зона */
         .game-card { background: var(--card); border-radius: 20px; padding: 16px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        
-        /* Экран Ракеты */
-        .rocket-screen { position: relative; height: 220px; background: radial-gradient(circle at bottom, #1e3a8a 0%, #0f172a 100%); border-radius: 16px; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-direction: column; margin-bottom: 16px; border: 1px solid #334155; }
-        .multiplier { font-size: 48px; font-weight: 800; z-index: 2; transition: color 0.2s; }
+        .hidden { display: none !important; }
+
+        /* Ракета */
+        .rocket-screen { position: relative; height: 200px; background: radial-gradient(circle at bottom, #1e3a8a 0%, #0f172a 100%); border-radius: 16px; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-direction: column; margin-bottom: 14px; border: 1px solid #334155; }
+        .multiplier { font-size: 46px; font-weight: 800; z-index: 2; }
         .multiplier.crashed { color: var(--red); }
         .multiplier.cashed { color: var(--green); }
-        .status-text { font-size: 14px; color: var(--muted); z-index: 2; margin-top: 4px; }
-        .rocket-emoji { position: absolute; bottom: 20px; left: 20px; font-size: 42px; transition: transform 0.1s linear; z-index: 1; }
+        .status-text { font-size: 13px; color: var(--muted); z-index: 2; margin-top: 4px; text-align: center; padding: 0 10px; }
+        .rocket-emoji { position: absolute; bottom: 20px; left: 20px; font-size: 40px; transition: transform 0.1s linear; z-index: 1; }
 
-        /* Управление ставкой */
-        .controls { display: flex; flex-direction: column; gap: 12px; }
+        /* Мины */
+        .mines-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 14px; }
+        .mine-cell { aspect-ratio: 1; background: #0f172a; border: 1px solid #334155; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
+        .mine-cell.open-gem { background: rgba(16, 185, 129, 0.2); border-color: var(--green); }
+        .mine-cell.open-bomb { background: rgba(239, 68, 68, 0.2); border-color: var(--red); }
+
+        /* Слоты */
+        .slots-box { display: flex; justify-content: center; gap: 12px; background: #0f172a; padding: 24px 12px; border-radius: 16px; border: 1px solid #334155; margin-bottom: 14px; }
+        .slot-reel { width: 76px; height: 86px; background: var(--card); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 44px; border: 2px solid #334155; }
+
+        /* Каскад */
+        .cascade-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; background: #0f172a; padding: 10px; border-radius: 16px; border: 1px solid #334155; margin-bottom: 14px; }
+        .cascade-cell { aspect-ratio: 1; background: var(--card); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; transition: transform 0.2s; }
+        .cascade-cell.pop { transform: scale(1.2); background: rgba(59, 130, 246, 0.3); }
+
+        /* Управление */
+        .controls { display: flex; flex-direction: column; gap: 10px; }
         .bet-row { display: flex; gap: 8px; align-items: center; background: var(--bg); padding: 8px 12px; border-radius: 12px; }
         .bet-input { background: transparent; border: none; color: var(--text); font-size: 18px; font-weight: 700; width: 100%; outline: none; }
         .quick-bet { background: var(--card); border: none; color: var(--text); padding: 6px 10px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; }
-        
-        .action-btn { background: var(--accent); color: white; border: none; padding: 16px; border-radius: 14px; font-size: 18px; font-weight: 700; cursor: pointer; width: 100%; transition: 0.2s; }
+        .action-btn { background: var(--accent); color: white; border: none; padding: 15px; border-radius: 14px; font-size: 17px; font-weight: 700; cursor: pointer; width: 100%; }
         .action-btn.cashout { background: var(--green); color: #000; }
-        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        
-        .coming-soon { text-align: center; padding: 40px 20px; color: var(--muted); }
-        .hidden { display: none !important; }
+        .info-bar { text-align: center; font-size: 14px; font-weight: 600; color: var(--muted); min-height: 20px; margin-bottom: 8px; }
     </style>
 </head>
 <body>
@@ -64,173 +72,404 @@
             <span class="coin">₵</span>
             <span id="balance">1000</span>
         </div>
-        <button class="bonus-btn" onclick="addBonus()">+500 бесплатно</button>
+        <button type="button" class="bonus-btn" id="btn-bonus">+500 бесплатно</button>
     </div>
 
     <div class="nav">
-        <div class="nav-btn active" onclick="switchTab('rocket', this)">
-            <span class="nav-icon">🚀</span>Ракета
-        </div>
-        <div class="nav-btn" onclick="switchTab('mines', this)">
-            <span class="nav-icon">💣</span>Мины
-        </div>
-        <div class="nav-btn" onclick="switchTab('slots', this)">
-            <span class="nav-icon">🎰</span>Слоты
-        </div>
-        <div class="nav-btn" onclick="switchTab('cascade', this)">
-            <span class="nav-icon">💎</span>Каскад
-        </div>
+        <div class="nav-btn active" data-tab="rocket"><span class="nav-icon">🚀</span>Ракета</div>
+        <div class="nav-btn" data-tab="mines"><span class="nav-icon">💣</span>Мины</div>
+        <div class="nav-btn" data-tab="slots"><span class="nav-icon">🎰</span>Слоты</div>
+        <div class="nav-btn" data-tab="cascade"><span class="nav-icon">💎</span>Каскад</div>
     </div>
 
-    <!-- ИГРА 1: РАКЕТА -->
+    <!-- 1. РАКЕТА -->
     <div id="game-rocket" class="game-card">
         <div class="rocket-screen">
             <div id="mult-display" class="multiplier">1.00x</div>
             <div id="status-display" class="status-text">Сделайте ставку для запуска</div>
             <div id="rocket" class="rocket-emoji">🚀</div>
         </div>
-
         <div class="controls">
             <div class="bet-row">
-                <input type="number" id="bet-amount" class="bet-input" value="100" min="10">
-                <button class="quick-bet" onclick="setBet(0.5)">½</button>
-                <button class="quick-bet" onclick="setBet(2)">2x</button>
-                <button class="quick-bet" onclick="setBet('max')">MAX</button>
+                <input type="number" id="bet-rocket" class="bet-input" value="100" min="10">
+                <button type="button" class="quick-bet" data-target="bet-rocket" data-mult="0.5">½</button>
+                <button type="button" class="quick-bet" data-target="bet-rocket" data-mult="2">2x</button>
+                <button type="button" class="quick-bet" data-target="bet-rocket" data-mult="max">MAX</button>
             </div>
-            <button id="rocket-btn" class="action-btn" onclick="handleRocketAction()">ЗАПУСТИТЬ РАКЕТУ</button>
+            <button type="button" id="rocket-btn" class="action-btn">ЗАПУСТИТЬ РАКЕТУ</button>
         </div>
     </div>
 
-    <!-- ЗАГЛУШКИ ДЛЯ ОСТАЛЬНЫХ ИГР (ДОБАВИМ НА СЛЕДУЮЩЕМ ШАГЕ) -->
+    <!-- 2. МИНЫ -->
     <div id="game-mines" class="game-card hidden">
-        <div class="coming-soon">💣 Игра «Мины» будет добавлена следующим шагом!</div>
+        <div>
+            <div id="mines-info" class="info-bar">5 бомб на поле • Найдите кристаллы</div>
+            <div id="mines-grid" class="mines-grid"></div>
+        </div>
+        <div class="controls">
+            <div class="bet-row">
+                <input type="number" id="bet-mines" class="bet-input" value="100" min="10">
+                <button type="button" class="quick-bet" data-target="bet-mines" data-mult="0.5">½</button>
+                <button type="button" class="quick-bet" data-target="bet-mines" data-mult="2">2x</button>
+                <button type="button" class="quick-bet" data-target="bet-mines" data-mult="max">MAX</button>
+            </div>
+            <button type="button" id="mines-btn" class="action-btn">НАЧАТЬ ИГРУ (МИНЫ)</button>
+        </div>
     </div>
+
+    <!-- 3. СЛОТЫ -->
     <div id="game-slots" class="game-card hidden">
-        <div class="coming-soon">🎰 Игра «Слоты» будет добавлена следующим шагом!</div>
+        <div>
+            <div id="slots-info" class="info-bar">3 в ряд = x10 • 2 в ряд = x2</div>
+            <div class="slots-box">
+                <div id="reel-1" class="slot-reel">🍒</div>
+                <div id="reel-2" class="slot-reel">🍋</div>
+                <div id="reel-3" class="slot-reel">💎</div>
+            </div>
+        </div>
+        <div class="controls">
+            <div class="bet-row">
+                <input type="number" id="bet-slots" class="bet-input" value="100" min="10">
+                <button type="button" class="quick-bet" data-target="bet-slots" data-mult="0.5">½</button>
+                <button type="button" class="quick-bet" data-target="bet-slots" data-mult="2">2x</button>
+                <button type="button" class="quick-bet" data-target="bet-slots" data-mult="max">MAX</button>
+            </div>
+            <button type="button" id="slots-btn" class="action-btn">КРУТИТЬ СЛОТЫ</button>
+        </div>
     </div>
+
+    <!-- 4. КАСКАД -->
     <div id="game-cascade" class="game-card hidden">
-        <div class="coming-soon">💎 Игра «Каскад» будет добавлена следующим шагом!</div>
+        <div>
+            <div id="cascade-info" class="info-bar">Совпадение от 5 символов запускает взрыв</div>
+            <div id="cascade-grid" class="cascade-grid"></div>
+        </div>
+        <div class="controls">
+            <div class="bet-row">
+                <input type="number" id="bet-cascade" class="bet-input" value="100" min="10">
+                <button type="button" class="quick-bet" data-target="bet-cascade" data-mult="0.5">½</button>
+                <button type="button" class="quick-bet" data-target="bet-cascade" data-mult="2">2x</button>
+                <button type="button" class="quick-bet" data-target="bet-cascade" data-mult="max">MAX</button>
+            </div>
+            <button type="button" id="cascade-btn" class="action-btn">ЗАПУСТИТЬ КАСКАД</button>
+        </div>
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-
-        // Загрузка баланса
-        let balance = parseInt(localStorage.getItem('virtual_balance')) || 1000;
-        const balanceEl = document.getElementById('balance');
-        
-        function updateBalance(newBal) {
-            balance = Math.floor(newBal);
-            balanceEl.innerText = balance;
-            localStorage.setItem('virtual_balance', balance);
-        }
-        updateBalance(balance);
-
-        function addBonus() {
-            if (balance < 100) {
-                updateBalance(balance + 500);
-                tg.HapticFeedback?.notificationOccurred('success');
-            } else {
-                alert('Бесплатный бонус доступен, когда на балансе меньше 100 монет!');
-            }
-        }
-
-        function switchTab(gameId, btn) {
-            if (isFlying) return;
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            ['rocket', 'mines', 'slots', 'cascade'].forEach(id => {
-                document.getElementById('game-' + id).classList.add('hidden');
-            });
-            document.getElementById('game-' + gameId).classList.remove('hidden');
-        }
-
-        function setBet(factor) {
-            if (isFlying) return;
-            const input = document.getElementById('bet-amount');
-            let val = parseInt(input.value) || 100;
-            if (factor === 'max') val = balance;
-            else val = Math.max(10, Math.floor(val * factor));
-            input.value = Math.min(val, balance);
-        }
-
-        // Логика Ракеты
-        let isFlying = false;
-        let currentMult = 1.00;
-        let crashPoint = 1.00;
-        let currentBet = 0;
-        let gameInterval = null;
-
-        function handleRocketAction() {
-            const btn = document.getElementById('rocket-btn');
-            const multEl = document.getElementById('mult-display');
-            const statusEl = document.getElementById('status-display');
-            const rocketEl = document.getElementById('rocket');
-
-            if (!isFlying) {
-                // Старт игры
-                const bet = parseInt(document.getElementById('bet-amount').value);
-                if (!bet || bet <= 0 || bet > balance) {
-                    alert('Некорректная ставка или недостаточно монет!');
-                    return;
-                }
-
-                updateBalance(balance - bet);
-                currentBet = bet;
-                isFlying = true;
-                currentMult = 1.00;
-                
-                // Генерация точки взрыва (шанс мгновенного краша + случайный рост)
-                const r = Math.random();
-                crashPoint = r < 0.08 ? 1.00 : Math.max(1.05, (0.95 / (1 - r)));
-                if (crashPoint > 50) crashPoint = 50;
-
-                multEl.className = 'multiplier';
-                statusEl.innerText = 'Ракета в полете...';
-                btn.innerText = `ЗАБРАТЬ (${bet} ₵)`;
-                btn.classList.add('cashout');
-
-                gameInterval = setInterval(() => {
-                    currentMult += 0.01 * (currentMult * 0.6);
-                    
-                    if (currentMult >= crashPoint) {
-                        // Взрыв
-                        clearInterval(gameInterval);
-                        isFlying = false;
-                        multEl.innerText = crashPoint.toFixed(2) + 'x';
-                        multEl.classList.add('crashed');
-statusEl.innerText = '💥 Ракета улетела! Вы проиграли.';
+        // Безопасная инициализация Telegram WebApp
+        let tg = null;
+        try {
+if (window.Telegram && window.Telegram.WebApp) {
+tg = window.Telegram.WebApp;
+tg.ready();
+tg.expand();
+}
+} catch (e) {}
+function vibrate(type) {
+try {
+if (tg && tg.HapticFeedback) {
+tg.HapticFeedback.notificationOccurred(type);
+}
+} catch (e) {}
+}
+// Безопасный баланс
+let balance = 1000;
+try {
+const saved = localStorage.getItem('virtual_balance_v2');
+if (saved !== null && !isNaN(parseInt(saved))) {
+balance = parseInt(saved);
+}
+} catch (e) {}
+const balanceEl = document.getElementById('balance');
+function updateBalance(newBal) {
+balance = Math.max(0, Math.floor(newBal));
+balanceEl.innerText = balance;
+try { localStorage.setItem('virtual_balance_v2', balance); } catch (e) {}
+}
+updateBalance(balance);
+// Кнопка бонуса
+document.getElementById('btn-bonus').addEventListener('click', () => {
+if (balance < 100) {
+updateBalance(balance + 500);
+vibrate('success');
+} else {
+const oldText = document.getElementById('btn-bonus').innerText;
+document.getElementById('btn-bonus').innerText = 'Нужно < 100 ₵';
+setTimeout(() => { document.getElementById('btn-bonus').innerText = oldText; }, 1200);
+}
+});
+// Переключение вкладок
+let busy = false;
+document.querySelectorAll('.nav-btn').forEach(btn => {
+btn.addEventListener('click', () => {
+if (busy) return;
+document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+btn.classList.add('active');
+const tab = btn.getAttribute('data-tab');
+['rocket', 'mines', 'slots', 'cascade'].forEach(id => {
+document.getElementById('game-' + id).classList.add('hidden');
+});
+document.getElementById('game-' + tab).classList.remove('hidden');
+});
+});
+// Быстрые ставки
+document.querySelectorAll('.quick-bet').forEach(btn => {
+btn.addEventListener('click', () => {
+if (busy) return;
+const input = document.getElementById(btn.getAttribute('data-target'));
+const mult = btn.getAttribute('data-mult');
+let val = parseInt(input.value) || 100;
+if (mult === 'max') val = balance;
+else val = Math.max(10, Math.floor(val * parseFloat(mult)));
+input.value = Math.min(val, balance);
+});
+});
+// ================= 1. РАКЕТА =================
+let rocketFlying = false;
+let currentMult = 1.00;
+let crashPoint = 1.00;
+let rocketBet = 0;
+let rocketTimer = null;
+document.getElementById('rocket-btn').addEventListener('click', () => {
+const btn = document.getElementById('rocket-btn');
+const multEl = document.getElementById('mult-display');
+const statusEl = document.getElementById('status-display');
+const rocketEl = document.getElementById('rocket');
+if (!rocketFlying) {
+const bet = parseInt(document.getElementById('bet-rocket').value);
+if (!bet || bet <= 0 || bet > balance) {
+statusEl.innerText = '⚠️ Не хватает монет или неверная ставка!';
+return;
+}
+updateBalance(balance - bet);
+rocketBet = bet;
+rocketFlying = true;
+busy = true;
+currentMult = 1.00;
+const r = Math.random();
+crashPoint = r < 0.08 ? 1.00 : Math.min(40, Math.max(1.06, 0.95 / (1 - r)));
+multEl.className = 'multiplier';
+statusEl.innerText = 'Ракета набирает высоту...';
+btn.innerText = ЗАБРАТЬ (${bet} ₵);
+btn.classList.add('cashout');
+rocketTimer = setInterval(() => {
+currentMult += 0.01 * (currentMult * 0.65);
+if (currentMult >= crashPoint) {
+clearInterval(rocketTimer);
+rocketFlying = false;
+busy = false;
+multEl.innerText = crashPoint.toFixed(2) + 'x';
+multEl.classList.add('crashed');
+statusEl.innerText = '💥 Взрыв! Ставка сгорела.';
 rocketEl.innerText = '💥';
 btn.innerText = 'ЗАПУСТИТЬ РАКЕТУ';
 btn.classList.remove('cashout');
-tg.HapticFeedback?.notificationOccurred('error');
+vibrate('error');
 setTimeout(() => {
 rocketEl.innerText = '🚀';
 rocketEl.style.transform = 'translate(0, 0)';
-}, 1500);
+}, 1200);
 } else {
 multEl.innerText = currentMult.toFixed(2) + 'x';
-const win = Math.floor(currentBet * currentMult);
-btn.innerText = ЗАБРАТЬ (${win} ₵);
-const moveX = Math.min(220, (currentMult - 1) * 45);
-const moveY = Math.min(130, (currentMult - 1) * 30);
+btn.innerText = ЗАБРАТЬ (${Math.floor(rocketBet * currentMult)} ₵);
+const moveX = Math.min(200, (currentMult - 1) * 45);
+const moveY = Math.min(120, (currentMult - 1) * 30);
 rocketEl.style.transform = translate(${moveX}px, -${moveY}px);
 }
 }, 60);
 } else {
-// Забрать выигрыш
-clearInterval(gameInterval);
-isFlying = false;
-const winAmount = Math.floor(currentBet * currentMult);
-updateBalance(balance + winAmount);
+clearInterval(rocketTimer);
+rocketFlying = false;
+busy = false;
+const win = Math.floor(rocketBet * currentMult);
+updateBalance(balance + win);
 multEl.classList.add('cashed');
-statusEl.innerText = 🎉 Вы забрали ${winAmount} ₵!;
+statusEl.innerText = 🎉 Успех! Вы забрали ${win} ₵;
 btn.innerText = 'ЗАПУСТИТЬ РАКЕТУ';
 btn.classList.remove('cashout');
-tg.HapticFeedback?.notificationOccurred('success');
-setTimeout(() => {
-rocketEl.style.transform = 'translate(0, 0)';
-}, 1000);
+vibrate('success');
+setTimeout(() => { rocketEl.style.transform = 'translate(0, 0)'; }, 800);
+}
+});
+// ================= 2. МИНЫ =================
+const minesGridEl = document.getElementById('mines-grid');
+let minesActive = false;
+let minePositions = [];
+let minesBet = 0;
+let gemsFound = 0;
+function renderEmptyMines() {
+minesGridEl.innerHTML = '';
+for (let i = 0; i < 25; i++) {
+const cell = document.createElement('div');
+cell.className = 'mine-cell';
+cell.innerText = '❓';
+cell.addEventListener('click', () => handleMineClick(i, cell));
+minesGridEl.appendChild(cell);
 }
 }
+renderEmptyMines();
+document.getElementById('mines-btn').addEventListener('click', () => {
+const btn = document.getElementById('mines-btn');
+const info = document.getElementById('mines-info');
+if (!minesActive) {
+const bet = parseInt(document.getElementById('bet-mines').value);
+if (!bet || bet <= 0 || bet > balance) {
+info.innerText = '⚠️ Недостаточно монет!';
+return;
+}
+updateBalance(balance - bet);
+minesBet = bet;
+minesActive = true;
+busy = true;
+gemsFound = 0;
+minePositions = [];
+while (minePositions.length < 5) {
+const pos = Math.floor(Math.random() * 25);
+if (!minePositions.includes(pos)) minePositions.push(pos);
+}
+renderEmptyMines();
+info.innerText = 'Открывайте клетки! Множитель: 1.00x';
+btn.innerText = ЗАБРАТЬ (${bet} ₵);
+btn.classList.add('cashout');
+} else {
+const mult = 1 + (gemsFound * 0.25);
+const win = Math.floor(minesBet * mult);
+updateBalance(balance + win);
+minesActive = false;
+busy = false;
+info.innerText = 🎉 Вы забрали ${win} ₵ (${mult.toFixed(2)}x)!;
+btn.innerText = 'НАЧАТЬ ИГРУ (МИНЫ)';
+btn.classList.remove('cashout');
+vibrate('success');
+}
+});
+function handleMineClick(index, cell) {
+if (!minesActive || cell.classList.contains('open-gem')) return;
+const btn = document.getElementById('mines-btn');
+const info = document.getElementById('mines-info');
+if (minePositions.includes(index)) {
+minesActive = false;
+busy = false;
+const allCells = minesGridEl.children;
+minePositions.forEach(pos => {
+allCells[pos].classList.add('open-bomb');
+allCells[pos].innerText = '💣';
+});
+info.innerText = '💥 Бум! Вы попали на мину.';
+btn.innerText = 'НАЧАТЬ ИГРУ (МИНЫ)';
+btn.classList.remove('cashout');
+vibrate('error');
+} else {
+cell.classList.add('open-gem');
+cell.innerText = '💎';
+gemsFound++;
+const mult = 1 + (gemsFound * 0.25);
+const win = Math.floor(minesBet * mult);
+info.innerText = 💎 Кристаллов: ${gemsFound} • Множитель: ${mult.toFixed(2)}x;
+btn.innerText = ЗАБРАТЬ (${win} ₵);
+vibrate('success');
+}
+}
+// ================= 3. СЛОТЫ =================
+const slotSymbols = ['🍒', '🍋', '🍇', '🔔', '💎', '7️⃣'];
+document.getElementById('slots-btn').addEventListener('click', () => {
+if (busy) return;
+const bet = parseInt(document.getElementById('bet-slots').value);
+const info = document.getElementById('slots-info');
+if (!bet || bet <= 0 || bet > balance) {
+info.innerText = '⚠️ Недостаточно монет!';
+return;
+}
+updateBalance(balance - bet);
+busy = true;
+info.innerText = 'Барабаны крутятся...';
+let ticks = 0;
+const spinTimer = setInterval(() => {
+document.getElementById('reel-1').innerText = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+document.getElementById('reel-2').innerText = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+document.getElementById('reel-3').innerText = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+ticks++;
+if (ticks > 12) {
+clearInterval(spinTimer);
+busy = false;
+const r1 = document.getElementById('reel-1').innerText;
+const r2 = document.getElementById('reel-2').innerText;
+const r3 = document.getElementById('reel-3').innerText;
+if (r1 === r2 && r2 === r3) {
+const win = bet * 10;
+updateBalance(balance + win);
+info.innerText = 🔥 ДЖЕКПОТ x10! Выигрыш: ${win} ₵;
+vibrate('success');
+} else if (r1 === r2 || r2 === r3 || r1 === r3) {
+const win = bet * 2;
+updateBalance(balance + win);
+info.innerText = ✨ Совпадение x2! Выигрыш: ${win} ₵;
+vibrate('success');
+} else {
+info.innerText = 'Нет совпадений. Попробуйте еще раз!';
+}
+}
+}, 80);
+});
+// ================= 4. КАСКАД =================
+const cascadeIcons = ['🍎', '🍊', '🍇', '💎', '⭐'];
+const cascadeGridEl = document.getElementById('cascade-grid');
+let cascadeBoard = [];
+function fillCascadeBoard() {
+cascadeGridEl.innerHTML = '';
+cascadeBoard = [];
+for (let i = 0; i < 20; i++) {
+const icon = cascadeIcons[Math.floor(Math.random() * cascadeIcons.length)];
+cascadeBoard.push(icon);
+const cell = document.createElement('div');
+cell.className = 'cascade-cell';
+cell.innerText = icon;
+cascadeGridEl.appendChild(cell);
+}
+}
+fillCascadeBoard();
+document.getElementById('cascade-btn').addEventListener('click', () => {
+if (busy) return;
+const bet = parseInt(document.getElementById('bet-cascade').value);
+const info = document.getElementById('cascade-info');
+if (!bet || bet <= 0 || bet > balance) {
+info.innerText = '⚠️ Недостаточно монет!';
+return;
+}
+updateBalance(balance - bet);
+busy = true;
+let totalWin = 0;
+let combo = 1;
+function runCascadeStep() {
+fillCascadeBoard();
+const counts = {};
+cascadeBoard.forEach(sym => counts[sym] = (counts[sym] || 0) + 1);
+let matchedSym = null;
+for (const sym in counts) {
+if (counts[sym] >= 5) {
+matchedSym = sym;
+break;
+}
+}
+if (matchedSym) {
+const stepWin = Math.floor(bet * 0.8 * combo);
+totalWin += stepWin;
+Array.from(cascadeGridEl.children).forEach((cell, idx) => {
+if (cascadeBoard[idx] === matchedSym) cell.classList.add('pop');
+});
+info.innerText = 💥 Каскад x${combo}! Собрано ${counts[matchedSym]}x ${matchedSym} (+${stepWin} ₵);
+combo++;
+vibrate('success');
+setTimeout(runCascadeStep, 700);
+} else {
+busy = false;
+if (totalWin > 0) {
+updateBalance(balance + totalWin);
+info.innerText = 🎉 Серия завершена! Общий выигрыш: ${totalWin} ₵;
+} else {
+info.innerText = 'Кластеров от 5 символов не выпало.';
+}
+}
+}
+runCascadeStep();
+});
