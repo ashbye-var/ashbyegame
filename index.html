@@ -72,7 +72,7 @@
             <span class="coin">₵</span>
             <span id="balance">1000</span>
         </div>
-        <button type="button" class="bonus-btn" id="btn-bonus">+500 бесплатно</button>
+        <button type="button" id="btn-bonus" class="bonus-btn">+500 бесплатно</button>
     </div>
 
     <div class="nav">
@@ -173,17 +173,39 @@ tg.HapticFeedback.notificationOccurred(type);
 } catch (e) {}
 }
 // Безопасный баланс
+// Бесконечный баланс
 let balance = 1000;
 try {
-const saved = localStorage.getItem('virtual_balance_v2');
-if (saved !== null && !isNaN(parseInt(saved))) {
-balance = parseInt(saved);
-}
+    var saved = localStorage.getItem('virtual_balance_v2');
+    if (saved && !isNaN(parseInt(saved))) {
+        balance = parseInt(saved);
+    }
 } catch (e) {}
+
+const balanceEl = document.getElementById('balance');
+
+function updateBalance(newBal) {
+    balance = Math.max(0, Math.floor(newBal));
+    balanceEl.innerText = balance;
+    try { localStorage.setItem('virtual_balance_v2', balance); } catch (e) {}
+}
+updateBalance(balance);
 const balanceEl = document.getElementById('balance');
 function updateBalance(newBal) {
 balance = Math.max(0, Math.floor(newBal));
 balanceEl.innerText = balance;
+// Кнопка бонуса
+document.getElementById('btn-bonus').addEventListener('click', () => {
+    if (balance < 100) {
+        updateBalance(balance + 500);
+    } else {
+        const btn = document.getElementById('btn-bonus');
+        btn.innerText = 'Нужно < 100 ₵';
+        setTimeout(() => { 
+            btn.innerText = '+500 бесплатно'; 
+        }, 1200);
+    }
+});
 try { localStorage.setItem('virtual_balance_v2', balance); } catch (e) {}
 }
 updateBalance(balance);
