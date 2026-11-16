@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Game Center</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
             --bg: #111722;
@@ -20,6 +21,7 @@
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; user-select: none; }
         body { margin: 0; padding: 12px; background: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; }
 
+        /* Шапка и анимация баланса */
         .header { display: flex; justify-content: space-between; align-items: center; background: var(--panel); padding: 10px 14px; border-radius: 14px; margin-bottom: 10px; border: 1px solid var(--tile-border); }
         .balance-wrap { position: relative; display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 800; }
         .coin { background: var(--yellow); color: #111722; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; }
@@ -27,6 +29,7 @@
         .win-float.show { opacity: 1; top: -28px; }
         .bonus-btn { background: rgba(16, 185, 129, 0.15); color: var(--green); border: 1px solid var(--green); padding: 6px 10px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; }
 
+        /* Вкладки */
         .nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
         .nav-btn { background: var(--panel); border: 1px solid var(--tile-border); color: var(--muted); padding: 8px 4px; border-radius: 10px; font-size: 12px; font-weight: 700; text-align: center; cursor: pointer; transition: 0.15s; }
         .nav-btn.active { border-color: var(--yellow); color: var(--text); background: rgba(245, 158, 11, 0.12); }
@@ -35,11 +38,13 @@
         .hidden { display: none !important; }
         .sub-title { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
 
+        /* Кнопки выбора режимов */
         .opt-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
         .opt-label { font-size: 12px; color: var(--muted); margin-right: 4px; }
         .pill-btn { background: var(--tile); border: 1px solid var(--tile-border); color: var(--text); padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
         .pill-btn.active { border-color: var(--yellow); background: rgba(245, 158, 11, 0.15); color: var(--yellow); }
 
+        /* Поле ставки и желтая кнопка */
         .controls { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
         .bet-bar { display: flex; align-items: center; gap: 6px; background: var(--bg); padding: 6px 10px; border-radius: 10px; border: 1px solid var(--tile-border); }
         .bet-input { background: transparent; border: none; color: var(--text); font-size: 16px; font-weight: 700; width: 70px; outline: none; }
@@ -49,6 +54,7 @@
         .main-btn:active { transform: scale(0.98); }
         .main-btn.cashout { background: var(--green); color: #052e16; }
 
+        /* 1. РАЗГОН (РАКЕТА) */
         .rocket-box { position: relative; height: 210px; background: #141c2b; border-radius: 14px; border: 1px solid var(--tile-border); overflow: hidden; margin-bottom: 8px; }
         #rocket-canvas { width: 100%; height: 100%; display: block; }
         .rocket-mult { position: absolute; top: 38%; left: 50%; transform: translate(-50%, -50%); font-size: 42px; font-weight: 900; pointer-events: none; text-shadow: 0 4px 16px rgba(0,0,0,0.6); }
@@ -60,6 +66,7 @@
         .hist-pill.good { color: var(--green); border: 1px solid rgba(16,185,129,0.4); }
         .hist-pill.epic { color: var(--yellow); border: 1px solid rgba(245,158,11,0.5); }
 
+        /* 2. МИНЫ */
         .mines-wrap { background: #141c2b; padding: 10px; border-radius: 14px; border: 1px solid rgba(16, 185, 129, 0.25); }
         .mines-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
         .mine-tile { aspect-ratio: 1; background: linear-gradient(145deg, #253147, #1c2536); border: 1px solid #32415c; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; transition: transform 0.25s, background 0.25s; }
@@ -67,15 +74,17 @@
         .mine-tile.gem { background: rgba(16, 185, 129, 0.22); border-color: var(--green); }
         .mine-tile.bomb { background: rgba(239, 68, 68, 0.25); border-color: var(--red); }
 
+        /* 3. СЛОТЫ 5x3 (15 ЯЧЕЕК) */
         .slots-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; background: #141c2b; padding: 10px; border-radius: 14px; border: 1px solid var(--tile-border); }
         .slot-cell { aspect-ratio: 1; background: var(--tile); border: 1px solid var(--tile-border); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 26px; transition: 0.2s; }
         .slot-cell.win-cell { border-color: var(--yellow); background: rgba(245, 158, 11, 0.25); transform: scale(1.06); box-shadow: 0 0 12px rgba(245, 158, 11, 0.4); }
         .slot-cell.spinning { filter: blur(1px); transform: translateY(2px); }
 
+        /* 4. КАСКАД (ПЛИНКО) */
         .plinko-box { background: #141c2b; border-radius: 14px; border: 1px solid var(--tile-border); padding: 8px; }
         #plinko-canvas { width: 100%; height: auto; display: block; }
-        .buckets-row { display: flex; gap: 3px; margin-top: 4px; }
-        .bucket { flex: 1; text-align: center; font-size: 9px; font-weight: 800; padding: 5px 1px; border-radius: 5px; color: #fff; transition: transform 0.15s; }
+        .buckets-row { display: flex; gap: 2px; margin-top: 4px; }
+        .bucket { flex: 1; text-align: center; font-size: 9px; font-weight: 800; padding: 5px 0px; border-radius: 5px; color: #fff; transition: transform 0.15s; border: 1px solid transparent; }
 
         .status-line { text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); min-height: 18px; margin-top: 6px; }
     </style>
@@ -98,6 +107,7 @@
         <div class="nav-btn" onclick="switchGame('cascade', this)">⚪ Каскад</div>
     </div>
 
+    <!-- 1. РАЗГОН -->
     <div id="game-rocket" class="game-card">
         <div>
             <div class="sub-title">Забирай до взрыва — чем дольше летит, тем больше выигрыш.</div>
@@ -122,6 +132,7 @@
         </div>
     </div>
 
+    <!-- 2. МИНЫ -->
     <div id="game-mines" class="game-card hidden">
         <div>
             <div class="sub-title">Открывай клетки и забирай монеты, пока не попалась мина.</div>
@@ -150,6 +161,7 @@
         </div>
     </div>
 
+    <!-- 3. СЛОТЫ -->
     <div id="game-slots" class="game-card hidden">
         <div>
             <div class="sub-title">15 ячеек • Собирай линии по горизонтали и диагонали!</div>
@@ -169,6 +181,7 @@
         </div>
     </div>
 
+    <!-- 4. КАСКАД (ПЛИНКО) -->
     <div id="game-cascade" class="game-card hidden">
         <div>
             <div class="sub-title">Бросай шарик — чем дальше от центра лунка, тем больше множитель.</div>
@@ -214,7 +227,7 @@
         var balance = 1000;
         var displayedBalance = 1000;
         try {
-            var s = localStorage.getItem('casino_v6_bal');
+            var s = localStorage.getItem('casino_v7_bal');
             if (s && !isNaN(parseInt(s))) { balance = parseInt(s); displayedBalance = balance; }
         } catch (e) {}
 
@@ -228,7 +241,7 @@
         function setBalance(newBal, winDiff) {
             var start = displayedBalance;
             balance = Math.max(0, Math.floor(newBal));
-            try { localStorage.setItem('casino_v6_bal', balance); } catch (e) {}
+            try { localStorage.setItem('casino_v7_bal', balance); } catch (e) {}
 
             if (winDiff && winDiff > 0) {
                 var fl = document.getElementById('win-float');
@@ -531,12 +544,21 @@
             }
         }
 
-        // ================= 4. КАСКАД (ПИРАМИДКА) =================
+        // ================= 4. КАСКАД (ПИРАМИДКА - ТОЧНЫЕ ШАНСЫ КАК НА СКРИНШОТЕ) =================
         var pRows = 8, pRisk = 'low', pCount = 1, pBalls = [];
         var pMults = {
-            8:  { low: [5.5, 2.8, 1.44, 0.8, 0.49, 0.8, 1.44, 2.8, 5.5], high: [18, 4.0, 1.5, 0.5, 0.2, 0.5, 1.5, 4.0, 18] },
-            10: { low: [8.9, 3.0, 1.4, 1.1, 0.8, 0.5, 0.8, 1.1, 1.4, 3.0, 8.9], high: [35, 8.0, 2.5, 0.9, 0.4, 0.2, 0.4, 0.9, 2.5, 8.0, 35] },
-            12: { low: [14, 4.5, 2.0, 1.4, 1.1, 0.8, 0.5, 0.8, 1.1, 1.4, 2.0, 4.5, 14], high: [60, 15, 4.0, 1.5, 0.6, 0.3, 0.2, 0.3, 0.6, 1.5, 4.0, 15, 60] }
+            8:  {
+                low:  [5.5, 2.8, 1.44, 0.8, 0.49, 0.8, 1.44, 2.8, 5.5],
+                high: [29, 7.2, 2.1, 0.6, 0.2, 0.6, 2.1, 7.2, 29]
+            },
+            10: {
+                low:  [8.9, 3.0, 1.4, 1.1, 0.8, 0.5, 0.8, 1.1, 1.4, 3.0, 8.9],
+                high: [43, 12, 3.2, 1.2, 0.4, 0.2, 0.4, 1.2, 3.2, 12, 43]
+            },
+            12: {
+                low:  [14, 4.5, 2.0, 1.4, 1.1, 0.8, 0.5, 0.8, 1.1, 1.4, 2.0, 4.5, 14],
+                high: [75, 23, 7.2, 2.3, 0.8, 0.34, 0.2, 0.34, 0.8, 2.3, 7.2, 23, 75]
+            }
         };
 
         function setPlinkoRows(r, el) {
@@ -569,8 +591,20 @@
                 var d = document.createElement('div');
                 d.id = 'pb-' + i; d.className = 'bucket';
                 var m = arr[i];
-                d.style.background = m >= 4 ? '#ef4444' : (m >= 1.4 ? '#f59e0b' : (m >= 0.8 ? '#10b981' : '#334155'));
-                d.innerText = m;
+                if (m >= 10) {
+                    d.style.background = '#7f1d1d';
+                    d.style.borderColor = '#ef4444';
+                } else if (m >= 2) {
+                    d.style.background = '#78350f';
+                    d.style.borderColor = '#f59e0b';
+                } else if (m >= 0.8) {
+                    d.style.background = '#064e3b';
+                    d.style.borderColor = '#10b981';
+                } else {
+                    d.style.background = '#1e293b';
+                    d.style.borderColor = '#334155';
+                }
+                d.innerText = String(m).replace('.', ',');
                 box.appendChild(d);
             }
         }
@@ -615,7 +649,7 @@
                         var mult = pMults[pRows][pRisk][b.bucket];
                         var win = Math.floor(b.bet * mult);
                         if (win > 0) setBalance(balance + win, win);
-                        document.getElementById('plinko-status').innerText = 'Лунка ' + mult + 'x → +' + win + ' ₵';
+                        document.getElementById('plinko-status').innerText = 'Лунка ' + String(mult).replace('.', ',') + 'x → +' + win + ' ₵';
                         var el = document.getElementById('pb-' + b.bucket);
                         if (el) { el.style.transform = 'scale(1.25)'; setTimeout((function(e){ return function(){ e.style.transform = 'scale(1)'; }; })(el), 180); }
                         pBalls.splice(i, 1);
