@@ -15,6 +15,7 @@
             --yellow-hover: #d97706;
             --green: #10b981;
             --red: #ef4444;
+            --purple: #8b5cf6;
             --text: #f8fafc;
             --muted: #8b9bb4;
         }
@@ -34,18 +35,18 @@
         .nav-btn { background: var(--panel); border: 1px solid var(--tile-border); color: var(--muted); padding: 8px 4px; border-radius: 10px; font-size: 12px; font-weight: 700; text-align: center; cursor: pointer; transition: 0.15s; }
         .nav-btn.active { border-color: var(--yellow); color: var(--text); background: rgba(245, 158, 11, 0.12); }
 
-        .game-card { background: var(--panel); border-radius: 16px; padding: 14px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--tile-border); }
+        .game-card { background: var(--panel); border-radius: 16px; padding: 14px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--tile-border); position: relative; }
         .hidden { display: none !important; }
-        .sub-title { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+        .sub-title { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
 
         /* Кнопки выбора режимов */
-        .opt-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+        .opt-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
         .opt-label { font-size: 12px; color: var(--muted); margin-right: 4px; }
         .pill-btn { background: var(--tile); border: 1px solid var(--tile-border); color: var(--text); padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
         .pill-btn.active { border-color: var(--yellow); background: rgba(245, 158, 11, 0.15); color: var(--yellow); }
 
         /* Поле ставки и желтая кнопка */
-        .controls { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        .controls { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
         .bet-bar { display: flex; align-items: center; gap: 6px; background: var(--bg); padding: 6px 10px; border-radius: 10px; border: 1px solid var(--tile-border); }
         .bet-input { background: transparent; border: none; color: var(--text); font-size: 16px; font-weight: 700; width: 70px; outline: none; }
         .bet-of { font-size: 12px; color: var(--muted); margin-right: auto; }
@@ -53,6 +54,7 @@
         .main-btn { background: var(--yellow); color: #111722; border: none; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: 800; cursor: pointer; width: 100%; transition: 0.15s; }
         .main-btn:active { transform: scale(0.98); }
         .main-btn.cashout { background: var(--green); color: #052e16; }
+        .main-btn.freespin-mode { background: linear-gradient(135deg, #8b5cf6, #ec4899); color: #fff; box-shadow: 0 0 16px rgba(139, 92, 246, 0.45); }
 
         /* 1. РАЗГОН (РАКЕТА) */
         .rocket-box { position: relative; height: 210px; background: #141c2b; border-radius: 14px; border: 1px solid var(--tile-border); overflow: hidden; margin-bottom: 8px; }
@@ -74,17 +76,26 @@
         .mine-tile.gem { background: rgba(16, 185, 129, 0.22); border-color: var(--green); }
         .mine-tile.bomb { background: rgba(239, 68, 68, 0.25); border-color: var(--red); }
 
-        /* 3. СЛОТЫ 5x3 (15 ЯЧЕЕК) */
-        .slots-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; background: #141c2b; padding: 10px; border-radius: 14px; border: 1px solid var(--tile-border); }
-        .slot-cell { aspect-ratio: 1; background: var(--tile); border: 1px solid var(--tile-border); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 26px; transition: 0.2s; }
-        .slot-cell.win-cell { border-color: var(--yellow); background: rgba(245, 158, 11, 0.25); transform: scale(1.06); box-shadow: 0 0 12px rgba(245, 158, 11, 0.4); }
+        /* 3. СЛОТЫ 5x5 (25 ЯЧЕЕК + БЕСПЛАТНЫЕ КРУТКИ + MAX WIN) */
+        .slots-top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 6px; }
+        .maxwin-badge { background: rgba(245, 158, 11, 0.15); border: 1px solid var(--yellow); color: var(--yellow); font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 8px; }
+        .fs-badge { background: rgba(139, 92, 246, 0.2); border: 1px solid var(--purple); color: #c4b5fd; font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 8px; }
+        .slots-grid-5x5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; background: #141c2b; padding: 8px; border-radius: 14px; border: 1px solid var(--tile-border); }
+        .slot-cell { aspect-ratio: 1; background: var(--tile); border: 1px solid var(--tile-border); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 22px; transition: 0.2s; }
+        .slot-cell.win-cell { border-color: var(--yellow); background: rgba(245, 158, 11, 0.28); transform: scale(1.06); box-shadow: 0 0 10px rgba(245, 158, 11, 0.45); }
+        .slot-cell.scatter-cell { border-color: #ec4899; background: rgba(236, 72, 153, 0.28); transform: scale(1.08); box-shadow: 0 0 12px rgba(236, 72, 153, 0.55); }
         .slot-cell.spinning { filter: blur(1px); transform: translateY(2px); }
+
+        /* Оверлей MAX WIN */
+        .maxwin-overlay { position: absolute; inset: 0; background: rgba(17, 23, 34, 0.92); border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; text-align: center; padding: 16px; }
+        .maxwin-title { font-size: 34px; font-weight: 900; color: var(--yellow); text-shadow: 0 0 20px rgba(245, 158, 11, 0.7); margin-bottom: 6px; }
+        .maxwin-sum { font-size: 26px; font-weight: 800; color: var(--green); margin-bottom: 14px; }
 
         /* 4. КАСКАД (ПЛИНКО) */
         .plinko-box { background: #141c2b; border-radius: 14px; border: 1px solid var(--tile-border); padding: 8px; }
         #plinko-canvas { width: 100%; height: auto; display: block; }
-        .buckets-row { display: flex; gap: 2px; margin-top: 4px; }
-        .bucket { flex: 1; text-align: center; font-size: 9px; font-weight: 800; padding: 5px 0px; border-radius: 5px; color: #fff; transition: transform 0.15s; border: 1px solid transparent; }
+        .buckets-row { display: flex; gap: 3px; margin-top: 4px; }
+        .bucket { flex: 1; text-align: center; font-size: 9px; font-weight: 800; padding: 5px 1px; border-radius: 5px; color: #fff; transition: transform 0.15s; border: 1px solid transparent; }
 
         .status-line { text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); min-height: 18px; margin-top: 6px; }
     </style>
@@ -161,12 +172,21 @@
         </div>
     </div>
 
-    <!-- 3. СЛОТЫ -->
+    <!-- 3. СЛОТЫ 5x5 -->
     <div id="game-slots" class="game-card hidden">
+        <div id="maxwin-modal" class="maxwin-overlay hidden">
+            <div class="maxwin-title">🏆 MAX WIN 500x!</div>
+            <div class="maxwin-sum" id="maxwin-amount">+50 000 ₵</div>
+            <button type="button" class="main-btn" onclick="closeMaxWin()">Забрать награду</button>
+        </div>
         <div>
-            <div class="sub-title">15 ячеек • Собирай линии по горизонтали и диагонали!</div>
-            <div id="slots-grid" class="slots-grid"></div>
-            <div id="slots-status" class="status-line">Нажми «Крутить» для старта</div>
+            <div class="slots-top-bar">
+                <div class="maxwin-badge">🏆 MAX WIN: 500x</div>
+                <div class="fs-badge" id="fs-counter">😄 Бонус: 3–6 шт.</div>
+            </div>
+            <div class="sub-title">5×5 • Горизонталь, вертикаль, диагональ • 😄 от 3 шт. = фриспины</div>
+            <div id="slots-grid" class="slots-grid-5x5"></div>
+            <div id="slots-status" class="status-line">3+ в ряд (гориз/верт/диаг) • 😄 3=6FS, 6=20FS</div>
         </div>
         <div class="controls">
             <div class="bet-bar">
@@ -280,7 +300,7 @@
         }
 
         function setQuickBet(inputId, val) {
-            if (busy) return;
+            if (busy || freeSpins > 0) return;
             var inp = document.getElementById(inputId);
             inp.value = val === 'all' ? balance : Math.min(val, balance);
         }
@@ -457,108 +477,210 @@
             }
         }
 
-        // ================= 3. СЛОТЫ 5x3 =================
-        var sIcons = ['🍒', '🍋', '🍇', '🔔', '💎', '7️⃣'];
+        // ================= 3. СЛОТЫ 5x5 (ГОРИЗОНТАЛЬ, ВЕРТИКАЛЬ, ДИАГОНАЛЬ, СМАЙЛЫ, MAX WIN) =================
+        var sIcons = ['🍒', '🍋', '🍇', '🔔', '💎', '7️⃣', '😄'];
         var sCells = [];
-        function initSlotsGrid() {
+        var freeSpins = 0;
+        var fsBetLock = 100;
+        var fsTotalWin = 0;
+
+        function initSlotsGrid5x5() {
             var g = document.getElementById('slots-grid');
             g.innerHTML = ''; sCells = [];
-            for (var i = 0; i < 15; i++) {
+            for (var i = 0; i < 25; i++) {
                 var c = document.createElement('div');
                 c.className = 'slot-cell';
-                c.innerText = sIcons[i % sIcons.length];
+                c.innerText = sIcons[i % 6];
                 g.appendChild(c); sCells.push(c);
             }
         }
-        initSlotsGrid();
+        initSlotsGrid5x5();
+
+        function updateFreeSpinUI() {
+            var btn = document.getElementById('slots-btn');
+            var badge = document.getElementById('fs-counter');
+            var inp = document.getElementById('bet-slots');
+            if (freeSpins > 0) {
+                btn.innerText = '🎁 БЕСПЛАТНАЯ КРУТКА (' + freeSpins + ')';
+                btn.classList.add('freespin-mode');
+                badge.innerText = '🎁 Фриспины: ' + freeSpins + ' шт.';
+                inp.disabled = true;
+            } else {
+                btn.innerText = '🎰 Крутить';
+                btn.classList.remove('freespin-mode');
+                badge.innerText = '😄 Бонус: 3–6 шт.';
+                inp.disabled = false;
+            }
+        }
+
+        function closeMaxWin() {
+            document.getElementById('maxwin-modal').classList.add('hidden');
+        }
+
+        function pickSlotSymbol(smilesAlreadyOnBoard) {
+            // Ограничиваем максимум 6 смайликов на поле за один спин
+            if (smilesAlreadyOnBoard >= 6) {
+                return sIcons[Math.floor(Math.random() * 6)];
+            }
+            // Вероятность выпадения смайла ~9% на ячейку
+            if (Math.random() < 0.09) {
+                return '😄';
+            }
+            return sIcons[Math.floor(Math.random() * 6)];
+        }
 
         function spinSlots() {
             if (busy) return;
-            var bet = parseInt(document.getElementById('bet-slots').value);
             var st = document.getElementById('slots-status');
-            if (!bet || bet <= 0 || bet > balance) { st.innerText = 'Недостаточно монет!'; return; }
-            setBalance(balance - bet, 0);
-            busy = true; st.innerText = 'Барабаны крутятся...';
+            var bet = parseInt(document.getElementById('bet-slots').value);
 
-            for (var k = 0; k < 15; k++) { sCells[k].classList.remove('win-cell'); sCells[k].classList.add('spinning'); }
+            if (freeSpins > 0) {
+                freeSpins--;
+                bet = fsBetLock;
+                updateFreeSpinUI();
+                st.innerText = 'Бесплатная крутка! Осталось: ' + freeSpins;
+            } else {
+                if (!bet || bet <= 0 || bet > balance) { st.innerText = 'Недостаточно монет!'; return; }
+                setBalance(balance - bet, 0);
+                fsTotalWin = 0;
+                st.innerText = 'Барабаны 5×5 крутятся...';
+            }
+
+            busy = true;
+            for (var k = 0; k < 25; k++) {
+                sCells[k].classList.remove('win-cell', 'scatter-cell');
+                sCells[k].classList.add('spinning');
+            }
 
             var colStopped = [false, false, false, false, false];
-            var board = new Array(15);
+            var board = new Array(25);
+            var smileCount = 0;
 
             for (var col = 0; col < 5; col++) {
                 (function(cIdx) {
                     setTimeout(function() {
                         colStopped[cIdx] = true;
-                        for (var r = 0; r < 3; r++) {
+                        for (var r = 0; r < 5; r++) {
                             var idx = r * 5 + cIdx;
-                            var sym = sIcons[Math.floor(Math.random() * sIcons.length)];
+                            var sym = pickSlotSymbol(smileCount);
+                            if (sym === '😄') smileCount++;
                             board[idx] = sym;
                             sCells[idx].innerText = sym;
                             sCells[idx].classList.remove('spinning');
                         }
-                        if (cIdx === 4) { clearInterval(spinAnim); checkSlotLines(board, bet); }
-                    }, 350 + cIdx * 220);
+                        if (cIdx === 4) {
+                            clearInterval(spinAnim);
+                            evaluateBoard5x5(board, bet, smileCount);
+                        }
+                    }, 300 + cIdx * 180);
                 })(col);
             }
 
             var spinAnim = setInterval(function() {
                 for (var col = 0; col < 5; col++) {
                     if (!colStopped[col]) {
-                        for (var r = 0; r < 3; r++) {
-                            sCells[r * 5 + col].innerText = sIcons[Math.floor(Math.random() * sIcons.length)];
+                        for (var r = 0; r < 5; r++) {
+                            sCells[r * 5 + col].innerText = sIcons[Math.floor(Math.random() * 7)];
                         }
                     }
                 }
             }, 60);
         }
 
-        function checkSlotLines(b, bet) {
+        function evaluateBoard5x5(b, bet, smileCount) {
             busy = false;
             var st = document.getElementById('slots-status');
-            var lines = [
-                [0, 1, 2, 3, 4],
-                [5, 6, 7, 8, 9],
-                [10, 11, 12, 13, 14],
-                [0, 6, 12, 8, 4],
-                [10, 6, 2, 8, 14]
-            ];
             var totalMult = 0;
-            for (var l = 0; l < lines.length; l++) {
-                var line = lines[l];
-                var first = b[line[0]];
-                var match = 1;
-                for (var i = 1; i < 5; i++) {
-                    if (b[line[i]] === first) match++; else break;
-                }
-                if (match >= 3) {
-                    totalMult += (match === 5 ? 15 : (match === 4 ? 5 : 2));
-                    for (var m = 0; m < match; m++) sCells[line[m]].classList.add('win-cell');
+
+            // Вспомогательная проверка любой линии из 5 ячеек (ищем 3+ подряд одинаковых обычных символа)
+            function checkLine5(indices) {
+                var i = 0;
+                while (i < 5) {
+                    var sym = b[indices[i]];
+                    if (sym === '😄') { i++; continue; }
+                    var run = 1;
+                    while (i + run < 5 && b[indices[i + run]] === sym) {
+                        run++;
+                    }
+                    if (run >= 3) {
+                        var mult = run === 5 ? 20 : (run === 4 ? 5 : 1.5);
+                        if (sym === '7️⃣') mult *= 2.5;
+                        if (sym === '💎') mult *= 2;
+                        totalMult += mult;
+                        for (var m = i; m < i + run; m++) {
+                            sCells[indices[m]].classList.add('win-cell');
+                        }
+                    }
+                    i += run;
                 }
             }
-            if (totalMult > 0) {
-                var win = bet * totalMult;
+
+            // 1. Все 5 горизонтальных рядов
+            for (var r = 0; r < 5; r++) {
+                checkLine5([r*5, r*5+1, r*5+2, r*5+3, r*5+4]);
+            }
+
+            // 2. Все 5 вертикальных столбцов
+            for (var c = 0; c < 5; c++) {
+                checkLine5([c, c+5, c+10, c+15, c+20]);
+            }
+
+            // 3. Обе главные диагонали 5x5
+            checkLine5([0, 6, 12, 18, 24]);
+            checkLine5([4, 8, 12, 16, 20]);
+
+            // Проверка смайликов 😄 (Scatter бонус)
+            var awardedFS = 0;
+            if (smileCount >= 3) {
+                if (smileCount === 3) awardedFS = 6;
+                else if (smileCount === 4) awardedFS = 10;
+                else if (smileCount === 5) awardedFS = 15;
+                else awardedFS = 20; // Максимум 6 смайликов = 20 бесплатных круток
+
+                for (var s = 0; s < 25; s++) {
+                    if (b[s] === '😄') sCells[s].classList.add('scatter-cell');
+                }
+                if (freeSpins === 0) fsBetLock = bet;
+                freeSpins += awardedFS;
+                updateFreeSpinUI();
+            }
+
+            // Проверка MAX WIN (ограничение максимального выигрыша 500x от ставки)
+            var isMaxWin = false;
+            if (totalMult >= 500) {
+                totalMult = 500;
+                isMaxWin = true;
+            }
+
+            var win = Math.floor(bet * totalMult);
+            if (win > 0) {
                 setBalance(balance + win, win);
-                st.innerText = 'Выигрыш по линиям: +' + win + ' ₵ (' + totalMult + 'x)!';
+                fsTotalWin += win;
+            }
+
+            if (isMaxWin) {
+                document.getElementById('maxwin-amount').innerText = '+' + win + ' ₵';
+                document.getElementById('maxwin-modal').classList.remove('hidden');
+                st.innerText = '🏆 ДОСТИГНУТ MAX WIN 500x (+' + win + ' ₵)!';
+                freeSpins = 0;
+                updateFreeSpinUI();
+            } else if (awardedFS > 0 && win > 0) {
+                st.innerText = '🎉 +' + win + ' ₵ И +' + awardedFS + ' БЕСПЛАТНЫХ КРУТОК (' + smileCount + ' 😄)!';
+            } else if (awardedFS > 0) {
+                st.innerText = '😄 Выпало ' + smileCount + ' смайлов! +' + awardedFS + ' БЕСПЛАТНЫХ КРУТОК!';
+            } else if (win > 0) {
+                st.innerText = 'Выигрыш: +' + win + ' ₵ (' + totalMult.toFixed(1) + 'x)!';
             } else {
-                st.innerText = 'Нет комбинаций из 3+ символов.';
+                st.innerText = freeSpins > 0 ? 'Фриспин пустой. Осталось круток: ' + freeSpins : 'Нет комбинаций. Попробуй еще!';
             }
         }
 
-        // ================= 4. КАСКАД (ПИРАМИДКА - ТОЧНЫЕ ШАНСЫ КАК НА СКРИНШОТЕ) =================
+        // ================= 4. КАСКАД (ПИРАМИДКА) =================
         var pRows = 8, pRisk = 'low', pCount = 1, pBalls = [];
         var pMults = {
-            8:  {
-                low:  [5.5, 2.8, 1.44, 0.8, 0.49, 0.8, 1.44, 2.8, 5.5],
-                high: [29, 7.2, 2.1, 0.6, 0.2, 0.6, 2.1, 7.2, 29]
-            },
-            10: {
-                low:  [8.9, 3.0, 1.4, 1.1, 0.8, 0.5, 0.8, 1.1, 1.4, 3.0, 8.9],
-                high: [43, 12, 3.2, 1.2, 0.4, 0.2, 0.4, 1.2, 3.2, 12, 43]
-            },
-            12: {
-                low:  [14, 4.5, 2.0, 1.4, 1.1, 0.8, 0.5, 0.8, 1.1, 1.4, 2.0, 4.5, 14],
-                high: [75, 23, 7.2, 2.3, 0.8, 0.34, 0.2, 0.34, 0.8, 2.3, 7.2, 23, 75]
-            }
+            8:  { low: [5.5, 2.8, 1.44, 0.8, 0.49, 0.8, 1.44, 2.8, 5.5], high: [18, 4.0, 1.5, 0.5, 0.2, 0.5, 1.5, 4.0, 18] },
+            10: { low: [8.9, 3.0, 1.4, 1.1, 0.8, 0.5, 0.8, 1.1, 1.4, 3.0, 8.9], high: [35, 8.0, 2.5, 0.9, 0.4, 0.2, 0.4, 0.9, 2.5, 8.0, 35] },
+            12: { low: [14, 4.5, 2.0, 1.4, 1.1, 0.8, 0.5, 0.8, 1.1, 1.4, 2.0, 4.5, 14], high: [75, 23, 7.2, 2.3, 0.8, 0.34, 0.2, 0.34, 0.8, 2.3, 7.2, 23, 75] }
         };
 
         function setPlinkoRows(r, el) {
@@ -591,18 +713,14 @@
                 var d = document.createElement('div');
                 d.id = 'pb-' + i; d.className = 'bucket';
                 var m = arr[i];
-                if (m >= 10) {
-                    d.style.background = '#7f1d1d';
-                    d.style.borderColor = '#ef4444';
+                if (m >= 7) {
+                    d.style.background = '#2a1820'; d.style.borderColor = '#ef4444'; d.style.color = '#fca5a5';
                 } else if (m >= 2) {
-                    d.style.background = '#78350f';
-                    d.style.borderColor = '#f59e0b';
-                } else if (m >= 0.8) {
-                    d.style.background = '#064e3b';
-                    d.style.borderColor = '#10b981';
+                    d.style.background = '#2b2218'; d.style.borderColor = '#f59e0b'; d.style.color = '#fcd34d';
+                } else if (m >= 1) {
+                    d.style.background = '#152924'; d.style.borderColor = '#10b981'; d.style.color = '#6ee7b7';
                 } else {
-                    d.style.background = '#1e293b';
-                    d.style.borderColor = '#334155';
+                    d.style.background = '#1e2738'; d.style.borderColor = '#334155'; d.style.color = '#cbd5e1';
                 }
                 d.innerText = String(m).replace('.', ',');
                 box.appendChild(d);
