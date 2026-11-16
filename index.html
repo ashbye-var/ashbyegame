@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Game Center</title>
+    <script src="https://telegram.org"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --green: #10b981;
+            --red: #ef4444;
+            --text: #f8fafc;
+            --muted: #94a3b8;
+        }
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; user-select: none; }
+        body { margin: 0; padding: 16px; background: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; }
+        
+        /* Верхняя панель */
+        .header { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 12px 16px; border-radius: 16px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .balance-box { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 700; }
+        .coin { background: #f59e0b; color: #000; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; }
+        .bonus-btn { background: rgba(16, 185, 129, 0.15); color: var(--green); border: 1px solid var(--green); padding: 6px 12px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; }
+        .bonus-btn:active { transform: scale(0.95); }
+
+        /* Меню выбора игр */
+        .nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+        .nav-btn { background: var(--card); border: 2px solid transparent; color: var(--muted); padding: 10px 4px; border-radius: 12px; font-size: 12px; font-weight: 600; text-align: center; cursor: pointer; transition: 0.2s; }
+        .nav-btn.active { border-color: var(--accent); color: var(--text); background: rgba(59, 130, 246, 0.1); }
+        .nav-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+
+        /* Игровая зона */
+        .game-card { background: var(--card); border-radius: 20px; padding: 16px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        
+        /* Экран Ракеты */
+        .rocket-screen { position: relative; height: 220px; background: radial-gradient(circle at bottom, #1e3a8a 0%, #0f172a 100%); border-radius: 16px; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-direction: column; margin-bottom: 16px; border: 1px solid #334155; }
+        .multiplier { font-size: 48px; font-weight: 800; z-index: 2; transition: color 0.2s; }
+        .multiplier.crashed { color: var(--red); }
+        .multiplier.cashed { color: var(--green); }
+        .status-text { font-size: 14px; color: var(--muted); z-index: 2; margin-top: 4px; }
+        .rocket-emoji { position: absolute; bottom: 20px; left: 20px; font-size: 42px; transition: transform 0.1s linear; z-index: 1; }
+
+        /* Управление ставкой */
+        .controls { display: flex; flex-direction: column; gap: 12px; }
+        .bet-row { display: flex; gap: 8px; align-items: center; background: var(--bg); padding: 8px 12px; border-radius: 12px; }
+        .bet-input { background: transparent; border: none; color: var(--text); font-size: 18px; font-weight: 700; width: 100%; outline: none; }
+        .quick-bet { background: var(--card); border: none; color: var(--text); padding: 6px 10px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; }
+        
+        .action-btn { background: var(--accent); color: white; border: none; padding: 16px; border-radius: 14px; font-size: 18px; font-weight: 700; cursor: pointer; width: 100%; transition: 0.2s; }
+        .action-btn.cashout { background: var(--green); color: #000; }
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .coming-soon { text-align: center; padding: 40px 20px; color: var(--muted); }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="balance-box">
+            <span class="coin">₵</span>
+            <span id="balance">1000</span>
+        </div>
+        <button class="bonus-btn" onclick="addBonus()">+500 бесплатно</button>
+    </div>
+
+    <div class="nav">
+        <div class="nav-btn active" onclick="switchTab('rocket', this)">
+            <span class="nav-icon">🚀</span>Ракета
+        </div>
+        <div class="nav-btn" onclick="switchTab('mines', this)">
+            <span class="nav-icon">💣</span>Мины
+        </div>
+        <div class="nav-btn" onclick="switchTab('slots', this)">
+            <span class="nav-icon">🎰</span>Слоты
+        </div>
+        <div class="nav-btn" onclick="switchTab('cascade', this)">
+            <span class="nav-icon">💎</span>Каскад
+        </div>
+    </div>
+
+    <!-- ИГРА 1: РАКЕТА -->
+    <div id="game-rocket" class="game-card">
+        <div class="rocket-screen">
+            <div id="mult-display" class="multiplier">1.00x</div>
+            <div id="status-display" class="status-text">Сделайте ставку для запуска</div>
+            <div id="rocket" class="rocket-emoji">🚀</div>
+        </div>
+
+        <div class="controls">
+            <div class="bet-row">
+                <input type="number" id="bet-amount" class="bet-input" value="100" min="10">
+                <button class="quick-bet" onclick="setBet(0.5)">½</button>
+                <button class="quick-bet" onclick="setBet(2)">2x</button>
+                <button class="quick-bet" onclick="setBet('max')">MAX</button>
+            </div>
+            <button id="rocket-btn" class="action-btn" onclick="handleRocketAction()">ЗАПУСТИТЬ РАКЕТУ</button>
+        </div>
+    </div>
+
+    <!-- ЗАГЛУШКИ ДЛЯ ОСТАЛЬНЫХ ИГР (ДОБАВИМ НА СЛЕДУЮЩЕМ ШАГЕ) -->
+    <div id="game-mines" class="game-card hidden">
+        <div class="coming-soon">💣 Игра «Мины» будет добавлена следующим шагом!</div>
+    </div>
+    <div id="game-slots" class="game-card hidden">
+        <div class="coming-soon">🎰 Игра «Слоты» будет добавлена следующим шагом!</div>
+    </div>
+    <div id="game-cascade" class="game-card hidden">
+        <div class="coming-soon">💎 Игра «Каскад» будет добавлена следующим шагом!</div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Загрузка баланса
+        let balance = parseInt(localStorage.getItem('virtual_balance')) || 1000;
+        const balanceEl = document.getElementById('balance');
+        
+        function updateBalance(newBal) {
+            balance = Math.floor(newBal);
+            balanceEl.innerText = balance;
+            localStorage.setItem('virtual_balance', balance);
+        }
+        updateBalance(balance);
+
+        function addBonus() {
+            if (balance < 100) {
+                updateBalance(balance + 500);
+                tg.HapticFeedback?.notificationOccurred('success');
+            } else {
+                alert('Бесплатный бонус доступен, когда на балансе меньше 100 монет!');
+            }
+        }
+
+        function switchTab(gameId, btn) {
+            if (isFlying) return;
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            ['rocket', 'mines', 'slots', 'cascade'].forEach(id => {
+                document.getElementById('game-' + id).classList.add('hidden');
+            });
+            document.getElementById('game-' + gameId).classList.remove('hidden');
+        }
+
+        function setBet(factor) {
+            if (isFlying) return;
+            const input = document.getElementById('bet-amount');
+            let val = parseInt(input.value) || 100;
+            if (factor === 'max') val = balance;
+            else val = Math.max(10, Math.floor(val * factor));
+            input.value = Math.min(val, balance);
+        }
+
+        // Логика Ракеты
+        let isFlying = false;
+        let currentMult = 1.00;
+        let crashPoint = 1.00;
+        let currentBet = 0;
+        let gameInterval = null;
+
+        function handleRocketAction() {
+            const btn = document.getElementById('rocket-btn');
+            const multEl = document.getElementById('mult-display');
+            const statusEl = document.getElementById('status-display');
+            const rocketEl = document.getElementById('rocket');
+
+            if (!isFlying) {
+                // Старт игры
+                const bet = parseInt(document.getElementById('bet-amount').value);
+                if (!bet || bet <= 0 || bet > balance) {
+                    alert('Некорректная ставка или недостаточно монет!');
+                    return;
+                }
+
+                updateBalance(balance - bet);
+                currentBet = bet;
+                isFlying = true;
+                currentMult = 1.00;
+                
+                // Генерация точки взрыва (шанс мгновенного краша + случайный рост)
+                const r = Math.random();
+                crashPoint = r < 0.08 ? 1.00 : Math.max(1.05, (0.95 / (1 - r)));
+                if (crashPoint > 50) crashPoint = 50;
+
+                multEl.className = 'multiplier';
+                statusEl.innerText = 'Ракета в полете...';
+                btn.innerText = `ЗАБРАТЬ (${bet} ₵)`;
+                btn.classList.add('cashout');
+
+                gameInterval = setInterval(() => {
+                    currentMult += 0.01 * (currentMult * 0.6);
+                    
+                    if (currentMult >= crashPoint) {
+                        // Взрыв
+                        clearInterval(gameInterval);
+                        isFlying = false;
+                        multEl.innerText = crashPoint.toFixed(2) + 'x';
+                        multEl.classList.add('crashed');
+statusEl.innerText = '💥 Ракета улетела! Вы проиграли.';
+rocketEl.innerText = '💥';
+btn.innerText = 'ЗАПУСТИТЬ РАКЕТУ';
+btn.classList.remove('cashout');
+tg.HapticFeedback?.notificationOccurred('error');
+setTimeout(() => {
+rocketEl.innerText = '🚀';
+rocketEl.style.transform = 'translate(0, 0)';
+}, 1500);
+} else {
+multEl.innerText = currentMult.toFixed(2) + 'x';
+const win = Math.floor(currentBet * currentMult);
+btn.innerText = ЗАБРАТЬ (${win} ₵);
+const moveX = Math.min(220, (currentMult - 1) * 45);
+const moveY = Math.min(130, (currentMult - 1) * 30);
+rocketEl.style.transform = translate(${moveX}px, -${moveY}px);
+}
+}, 60);
+} else {
+// Забрать выигрыш
+clearInterval(gameInterval);
+isFlying = false;
+const winAmount = Math.floor(currentBet * currentMult);
+updateBalance(balance + winAmount);
+multEl.classList.add('cashed');
+statusEl.innerText = 🎉 Вы забрали ${winAmount} ₵!;
+btn.innerText = 'ЗАПУСТИТЬ РАКЕТУ';
+btn.classList.remove('cashout');
+tg.HapticFeedback?.notificationOccurred('success');
+setTimeout(() => {
+rocketEl.style.transform = 'translate(0, 0)';
+}, 1000);
+}
+}
