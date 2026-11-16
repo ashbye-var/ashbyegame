@@ -4,313 +4,638 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Game Center</title>
-    <script src="https://telegram.org"></script>
     <style>
         :root {
-            --bg: #0f172a;
-            --card: #1e293b;
-            --accent: #3b82f6;
+            --bg: #111722;
+            --panel: #192130;
+            --tile: #222d40;
+            --tile-border: #2e3b52;
+            --yellow: #f59e0b;
+            --yellow-hover: #d97706;
             --green: #10b981;
             --red: #ef4444;
             --text: #f8fafc;
-            --muted: #94a3b8;
+            --muted: #8b9bb4;
         }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; user-select: none; }
-        body { margin: 0; padding: 14px; background: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; }
-        .header { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 12px 16px; border-radius: 16px; margin-bottom: 14px; }
-        .balance-box { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 700; }
-        .coin { background: #f59e0b; color: #000; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; }
-        .bonus-btn { background: rgba(16, 185, 129, 0.15); color: var(--green); border: 1px solid var(--green); padding: 6px 12px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; }
-        .bonus-btn:active { transform: scale(0.95); }
-        .nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
-        .nav-btn { background: var(--card); border: 2px solid transparent; color: var(--muted); padding: 10px 4px; border-radius: 12px; font-size: 12px; font-weight: 600; text-align: center; cursor: pointer; }
-        .nav-btn.active { border-color: var(--accent); color: var(--text); background: rgba(59, 130, 246, 0.15); }
-        .nav-icon { font-size: 20px; display: block; margin-bottom: 4px; }
-        .game-card { background: var(--card); border-radius: 20px; padding: 16px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        body { margin: 0; padding: 12px; background: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; background: var(--panel); padding: 10px 14px; border-radius: 14px; margin-bottom: 10px; border: 1px solid var(--tile-border); }
+        .balance-wrap { position: relative; display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 800; }
+        .coin { background: var(--yellow); color: #111722; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; }
+        .win-float { position: absolute; left: 30px; top: -18px; color: var(--green); font-size: 14px; font-weight: 800; pointer-events: none; opacity: 0; transition: all 0.8s ease-out; }
+        .win-float.show { opacity: 1; top: -28px; }
+        .bonus-btn { background: rgba(16, 185, 129, 0.15); color: var(--green); border: 1px solid var(--green); padding: 6px 10px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; }
+
+        .nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+        .nav-btn { background: var(--panel); border: 1px solid var(--tile-border); color: var(--muted); padding: 8px 4px; border-radius: 10px; font-size: 12px; font-weight: 700; text-align: center; cursor: pointer; transition: 0.15s; }
+        .nav-btn.active { border-color: var(--yellow); color: var(--text); background: rgba(245, 158, 11, 0.12); }
+
+        .game-card { background: var(--panel); border-radius: 16px; padding: 14px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--tile-border); }
         .hidden { display: none !important; }
-        .rocket-screen { position: relative; height: 200px; background: radial-gradient(circle at bottom, #1e3a8a 0%, #0f172a 100%); border-radius: 16px; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-direction: column; margin-bottom: 14px; border: 1px solid #334155; }
-        .multiplier { font-size: 46px; font-weight: 800; z-index: 2; }
-        .multiplier.crashed { color: var(--red); }
-        .multiplier.cashed { color: var(--green); }
-        .status-text { font-size: 13px; color: var(--muted); z-index: 2; margin-top: 4px; text-align: center; padding: 0 10px; }
-        .rocket-emoji { position: absolute; bottom: 20px; left: 20px; font-size: 40px; transition: transform 0.1s linear; z-index: 1; }
-        .mines-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 14px; }
-        .mine-cell { aspect-ratio: 1; background: #0f172a; border: 1px solid #334155; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
-        .mine-cell.open-gem { background: rgba(16, 185, 129, 0.2); border-color: var(--green); }
-        .mine-cell.open-bomb { background: rgba(239, 68, 68, 0.2); border-color: var(--red); }
-        .slots-box { display: flex; justify-content: center; gap: 12px; background: #0f172a; padding: 24px 12px; border-radius: 16px; border: 1px solid #334155; margin-bottom: 14px; }
-        .slot-reel { width: 76px; height: 86px; background: var(--card); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 44px; border: 2px solid #334155; }
-        .cascade-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; background: #0f172a; padding: 10px; border-radius: 16px; border: 1px solid #334155; margin-bottom: 14px; }
-        .cascade-cell { aspect-ratio: 1; background: var(--card); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; transition: transform 0.2s; }
-        .cascade-cell.pop { transform: scale(1.2); background: rgba(59, 130, 246, 0.3); }
-        .controls { display: flex; flex-direction: column; gap: 10px; }
-        .bet-row { display: flex; gap: 8px; align-items: center; background: var(--bg); padding: 8px 12px; border-radius: 12px; }
-        .bet-input { background: transparent; border: none; color: var(--text); font-size: 18px; font-weight: 700; width: 100%; outline: none; }
-        .quick-bet { background: var(--card); border: none; color: var(--text); padding: 6px 10px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; }
-        .action-btn { background: var(--accent); color: white; border: none; padding: 15px; border-radius: 14px; font-size: 17px; font-weight: 700; cursor: pointer; width: 100%; }
-        .action-btn.cashout { background: var(--green); color: #000; }
-        .info-bar { text-align: center; font-size: 14px; font-weight: 600; color: var(--muted); min-height: 20px; margin-bottom: 8px; }
+        .sub-title { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+
+        .opt-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+        .opt-label { font-size: 12px; color: var(--muted); margin-right: 4px; }
+        .pill-btn { background: var(--tile); border: 1px solid var(--tile-border); color: var(--text); padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+        .pill-btn.active { border-color: var(--yellow); background: rgba(245, 158, 11, 0.15); color: var(--yellow); }
+
+        .controls { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        .bet-bar { display: flex; align-items: center; gap: 6px; background: var(--bg); padding: 6px 10px; border-radius: 10px; border: 1px solid var(--tile-border); }
+        .bet-input { background: transparent; border: none; color: var(--text); font-size: 16px; font-weight: 700; width: 70px; outline: none; }
+        .bet-of { font-size: 12px; color: var(--muted); margin-right: auto; }
+        .q-btn { background: var(--tile); border: 1px solid var(--tile-border); color: var(--text); padding: 5px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; }
+        .main-btn { background: var(--yellow); color: #111722; border: none; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: 800; cursor: pointer; width: 100%; transition: 0.15s; }
+        .main-btn:active { transform: scale(0.98); }
+        .main-btn.cashout { background: var(--green); color: #052e16; }
+
+        .rocket-box { position: relative; height: 210px; background: #141c2b; border-radius: 14px; border: 1px solid var(--tile-border); overflow: hidden; margin-bottom: 8px; }
+        #rocket-canvas { width: 100%; height: 100%; display: block; }
+        .rocket-mult { position: absolute; top: 38%; left: 50%; transform: translate(-50%, -50%); font-size: 42px; font-weight: 900; pointer-events: none; text-shadow: 0 4px 16px rgba(0,0,0,0.6); }
+        .rocket-mult.crashed { color: var(--red); }
+        .rocket-mult.cashed { color: var(--green); }
+        .rocket-sub { position: absolute; bottom: 10px; right: 12px; font-size: 11px; color: var(--muted); background: rgba(17,23,34,0.8); padding: 3px 8px; border-radius: 6px; }
+        .history-row { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 4px; }
+        .hist-pill { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; background: var(--tile); color: var(--muted); flex-shrink: 0; }
+        .hist-pill.good { color: var(--green); border: 1px solid rgba(16,185,129,0.4); }
+        .hist-pill.epic { color: var(--yellow); border: 1px solid rgba(245,158,11,0.5); }
+
+        .mines-wrap { background: #141c2b; padding: 10px; border-radius: 14px; border: 1px solid rgba(16, 185, 129, 0.25); }
+        .mines-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+        .mine-tile { aspect-ratio: 1; background: linear-gradient(145deg, #253147, #1c2536); border: 1px solid #32415c; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; transition: transform 0.25s, background 0.25s; }
+        .mine-tile.flipped { transform: rotateY(180deg) scale(1.04); }
+        .mine-tile.gem { background: rgba(16, 185, 129, 0.22); border-color: var(--green); }
+        .mine-tile.bomb { background: rgba(239, 68, 68, 0.25); border-color: var(--red); }
+
+        .slots-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; background: #141c2b; padding: 10px; border-radius: 14px; border: 1px solid var(--tile-border); }
+        .slot-cell { aspect-ratio: 1; background: var(--tile); border: 1px solid var(--tile-border); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 26px; transition: 0.2s; }
+        .slot-cell.win-cell { border-color: var(--yellow); background: rgba(245, 158, 11, 0.25); transform: scale(1.06); box-shadow: 0 0 12px rgba(245, 158, 11, 0.4); }
+        .slot-cell.spinning { filter: blur(1px); transform: translateY(2px); }
+
+        .plinko-box { background: #141c2b; border-radius: 14px; border: 1px solid var(--tile-border); padding: 8px; }
+        #plinko-canvas { width: 100%; height: auto; display: block; }
+        .buckets-row { display: flex; gap: 3px; margin-top: 4px; }
+        .bucket { flex: 1; text-align: center; font-size: 9px; font-weight: 800; padding: 5px 1px; border-radius: 5px; color: #fff; transition: transform 0.15s; }
+
+        .status-line { text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); min-height: 18px; margin-top: 6px; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="balance-box">
+        <div class="balance-wrap">
             <span class="coin">₵</span>
             <span id="balance">1000</span>
-            <span id="status-dot" style="font-size:12px;">🔴</span>
+            <span id="win-float" class="win-float">+0</span>
         </div>
         <button type="button" id="btn-bonus" class="bonus-btn">+500 бесплатно</button>
     </div>
 
     <div class="nav">
-        <div class="nav-btn active" data-tab="rocket"><span class="nav-icon">🚀</span>Ракета</div>
-        <div class="nav-btn" data-tab="mines"><span class="nav-icon">💣</span>Мины</div>
-        <div class="nav-btn" data-tab="slots"><span class="nav-icon">🎰</span>Слоты</div>
-        <div class="nav-btn" data-tab="cascade"><span class="nav-icon">💎</span>Каскад</div>
+        <div class="nav-btn active" onclick="switchGame('rocket', this)">🚀 Разгон</div>
+        <div class="nav-btn" onclick="switchGame('mines', this)">💣 Мины</div>
+        <div class="nav-btn" onclick="switchGame('slots', this)">🎰 Слоты</div>
+        <div class="nav-btn" onclick="switchGame('cascade', this)">⚪ Каскад</div>
     </div>
 
-    <!-- 1. РАКЕТА -->
     <div id="game-rocket" class="game-card">
-        <div class="rocket-screen">
-            <div id="mult-display" class="multiplier">1.00x</div>
-            <div id="status-display" class="status-text">Сделайте ставку для запуска</div>
-            <div id="rocket" class="rocket-emoji">🚀</div>
+        <div>
+            <div class="sub-title">Забирай до взрыва — чем дольше летит, тем больше выигрыш.</div>
+            <div class="rocket-box">
+                <canvas id="rocket-canvas" width="340" height="210"></canvas>
+                <div id="rocket-mult" class="rocket-mult">1.00x</div>
+                <div class="rocket-sub" id="rocket-status">Готов к запуску</div>
+            </div>
+            <div style="font-size:11px; color:var(--muted); margin-bottom:4px;">Последние раунды:</div>
+            <div id="rocket-history" class="history-row"></div>
         </div>
         <div class="controls">
-            <div class="bet-row">
-                <input type="number" id="bet-rocket" class="bet-input" value="100" min="10">
-                <button type="button" class="quick-bet" data-target="bet-rocket" data-mult="0.5">½</button>
-                <button type="button" class="quick-bet" data-target="bet-rocket" data-mult="2">2x</button>
-                <button type="button" class="quick-bet" data-target="bet-rocket" data-mult="max">MAX</button>
+            <div class="bet-bar">
+                <input type="number" id="bet-rocket" class="bet-input" value="100">
+                <span class="bet-of">из <span class="bal-mirror">1000</span></span>
+                <button type="button" class="q-btn" onclick="setQuickBet('bet-rocket', 50)">50</button>
+                <button type="button" class="q-btn" onclick="setQuickBet('bet-rocket', 100)">100</button>
+                <button type="button" class="q-btn" onclick="setQuickBet('bet-rocket', 250)">250</button>
+                <button type="button" class="q-btn" onclick="setQuickBet('bet-rocket', 'all')">Всё</button>
             </div>
-            <button type="button" id="rocket-btn" class="action-btn">ЗАПУСТИТЬ РАКЕТУ</button>
+            <button type="button" id="rocket-btn" class="main-btn" onclick="toggleRocket()">⚡ Запустить</button>
         </div>
     </div>
 
-    <!-- 2. МИНЫ -->
     <div id="game-mines" class="game-card hidden">
         <div>
-            <div id="mines-info" class="info-bar">5 бомб на поле • Найдите кристаллы</div>
-            <div id="mines-grid" class="mines-grid"></div>
+            <div class="sub-title">Открывай клетки и забирай монеты, пока не попалась мина.</div>
+            <div class="opt-row">
+                <span class="opt-label">Мин на поле:</span>
+                <button type="button" class="pill-btn" onclick="setMineCount(1, this)">1</button>
+                <button type="button" class="pill-btn active" onclick="setMineCount(3, this)">3</button>
+                <button type="button" class="pill-btn" onclick="setMineCount(5, this)">5</button>
+                <button type="button" class="pill-btn" onclick="setMineCount(10, this)">10</button>
+            </div>
+            <div class="mines-wrap">
+                <div id="mines-grid" class="mines-grid"></div>
+                <div id="mines-status" class="status-line">Выбери ставку и нажми «Начать»</div>
+            </div>
         </div>
         <div class="controls">
-            <div class="bet-row">
-                <input type="number" id="bet-mines" class="bet-input" value="100" min="10">
-                <button type="button" class="quick-bet" data-target="bet-mines" data-mult="0.5">½</button>
-                <button type="button" class="quick-bet" data-target="bet-mines" data-mult="2">2x</button>
-                <button type="button" class="quick-bet" data-target="bet-mines" data-mult="max">MAX</button>
+            <div class="bet-bar">
+                <input type="number" id="bet-mines" class="bet-input" value="100">
+                <span class="bet-of">из <span class="bal-mirror">1000</span></span>
+                <button type="button" class="q-btn" onclick="setQuickBet('bet-mines', 50)">50</button>
+                <button type="button" class="q-btn" onclick="setQuickBet('bet-mines', 100)">100</button>
+                <button type="button" class="q-btn" onclick="setQuickBet('bet-mines', 250)">250</button>
+                <button type="button" class="q-btn" onclick="setQuickBet('bet-mines', 'all')">Всё</button>
             </div>
-            <button type="button" id="mines-btn" class="action-btn">НАЧАТЬ ИГРУ (МИНЫ)</button>
+            <button type="button" id="mines-btn" class="main-btn" onclick="toggleMines()">Начать</button>
         </div>
     </div>
 
-    <!-- 3. СЛОТЫ -->
     <div id="game-slots" class="game-card hidden">
         <div>
-            <div id="slots-info" class="info-bar">3 в ряд = x10 • 2 в ряд = x2</div>
-            <div class="slots-box">
-                <div id="reel-1" class="slot-reel">🍒</div>
-                <div id="reel-2" class="slot-reel">🍋</div>
-                <div id="reel-3" class="slot-reel">💎</div>
-            </div>
+            <div class="sub-title">15 ячеек • Собирай линии по горизонтали и диагонали!</div>
+            <div id="slots-grid" class="slots-grid"></div>
+            <div id="slots-status" class="status-line">Нажми «Крутить» для старта</div>
         </div>
         <div class="controls">
-            <div class="bet-row">
-                <input type="number" id="bet-slots" class="bet-input" value="100" min="10">
-                <button type="button" class="quick-bet" data-target="bet-slots" data-mult="0.5">½</button>
-                <button type="button" class="quick-bet" data-target="bet-slots" data-mult="2">2x</button>
-                <button type="button" class="quick-bet" data-target="bet-slots" data-mult="max">MAX</button>
+            <div class="bet-bar">
+                <input type="number" id="bet-slots" class="bet-input" value="100">
+                <span class="bet-of">из <span class="bal-mirror">1000</span></span>
+                <button type="button" class="q-btn" onclick="setQuickBet('bet-slots', 50)">50</button>
+                <button type="button" class="q-btn" onclick="setQuickBet('bet-slots', 100)">100</button>
+                <button type="button" class="q-btn" onclick="setQuickBet('bet-slots', 250)">250</button>
+                <button type="button" class="q-btn" onclick="setQuickBet('bet-slots', 'all')">Всё</button>
             </div>
-            <button type="button" id="slots-btn" class="action-btn">КРУТИТЬ СЛОТЫ</button>
+            <button type="button" id="slots-btn" class="main-btn" onclick="spinSlots()">🎰 Крутить</button>
         </div>
     </div>
 
-    <!-- 4. КАСКАД -->
     <div id="game-cascade" class="game-card hidden">
         <div>
-            <div id="cascade-info" class="info-bar">Совпадение от 5 символов запускает взрыв</div>
-            <div id="cascade-grid" class="cascade-grid"></div>
+            <div class="sub-title">Бросай шарик — чем дальше от центра лунка, тем больше множитель.</div>
+            <div class="opt-row">
+                <span class="opt-label">Ряды:</span>
+                <button type="button" class="pill-btn active" onclick="setPlinkoRows(8, this)">8</button>
+                <button type="button" class="pill-btn" onclick="setPlinkoRows(10, this)">10</button>
+                <button type="button" class="pill-btn" onclick="setPlinkoRows(12, this)">12</button>
+                <span class="opt-label" style="margin-left:6px;">Риск:</span>
+                <button type="button" class="pill-btn active" id="risk-low-btn" onclick="setPlinkoRisk('low')">Низкий</button>
+                <button type="button" class="pill-btn" id="risk-high-btn" onclick="setPlinkoRisk('high')">Высокий</button>
+            </div>
+            <div class="opt-row">
+                <span class="opt-label">Шариков:</span>
+                <button type="button" class="pill-btn active" onclick="setPlinkoCount(1, this)">1</button>
+                <button type="button" class="pill-btn" onclick="setPlinkoCount(3, this)">3</button>
+                <button type="button" class="pill-btn" onclick="setPlinkoCount(5, this)">5</button>
+                <button type="button" class="pill-btn" onclick="setPlinkoCount(10, this)">10</button>
+            </div>
+            <div class="plinko-box">
+                <canvas id="plinko-canvas" width="330" height="195"></canvas>
+                <div id="plinko-buckets" class="buckets-row"></div>
+            </div>
+            <div id="plinko-status" class="status-line">Выбери параметры и нажми «Бросить»</div>
         </div>
         <div class="controls">
-            <div class="bet-row">
-                <input type="number" id="bet-cascade" class="bet-input" value="100" min="10">
-                <button type="button" class="quick-bet" data-target="bet-cascade" data-mult="0.5">½</button>
-                <button type="button" class="quick-bet" data-target="bet-cascade" data-mult="2">2x</button>
-                <button type="button" class="quick-bet" data-target="bet-cascade" data-mult="max">MAX</button>
+            <div class="bet-bar">
+                <input type="number" id="bet-cascade" class="bet-input" value="50">
+                <span class="bet-of">из <span class="bal-mirror">1000</span></span>
+                <button type="button" class="q-btn" onclick="setQuickBet('bet-cascade', 10)">10</button>
+                <button type="button" class="q-btn" onclick="setQuickBet('bet-cascade', 50)">50</button>
+                <button type="button" class="q-btn" onclick="setQuickBet('bet-cascade', 100)">100</button>
+                <button type="button" class="q-btn" onclick="setQuickBet('bet-cascade', 'all')">Всё</button>
             </div>
-            <button type="button" id="cascade-btn" class="action-btn">ЗАПУСТИТЬ КАСКАД</button>
+            <button type="button" class="main-btn" onclick="dropPlinkoVolley()">⚪ Бросить</button>
         </div>
     </div>
 
     <script>
-        document.getElementById('status-dot').innerText = '🟢';
         var tg = null;
         try { if (window.Telegram && window.Telegram.WebApp) { tg = window.Telegram.WebApp; tg.ready(); tg.expand(); } } catch (e) {}
-        function vibrate(type) { try { if (tg && tg.HapticFeedback) { tg.HapticFeedback.notificationOccurred(type); } } catch (e) {} }
 
         var balance = 1000;
-        try { var saved = localStorage.getItem('virtual_balance_v5'); if (saved && !isNaN(parseInt(saved))) { balance = parseInt(saved); } } catch (e) {}
-        var balanceEl = document.getElementById('balance');
-        function updateBalance(newBal) {
-            balance = Math.max(0, Math.floor(newBal));
-            balanceEl.innerText = balance;
-            try { localStorage.setItem('virtual_balance_v5', balance); } catch (e) {}
+        var displayedBalance = 1000;
+        try {
+            var s = localStorage.getItem('casino_v6_bal');
+            if (s && !isNaN(parseInt(s))) { balance = parseInt(s); displayedBalance = balance; }
+        } catch (e) {}
+
+        function syncMirrors(val) {
+            document.getElementById('balance').innerText = val;
+            var mirrors = document.querySelectorAll('.bal-mirror');
+            for (var i = 0; i < mirrors.length; i++) mirrors[i].innerText = val;
         }
-        updateBalance(balance);
+        syncMirrors(balance);
+
+        function setBalance(newBal, winDiff) {
+            var start = displayedBalance;
+            balance = Math.max(0, Math.floor(newBal));
+            try { localStorage.setItem('casino_v6_bal', balance); } catch (e) {}
+
+            if (winDiff && winDiff > 0) {
+                var fl = document.getElementById('win-float');
+                fl.innerText = '+' + winDiff + ' ₵';
+                fl.classList.add('show');
+                setTimeout(function() { fl.classList.remove('show'); }, 1000);
+            }
+
+            var step = 0, steps = 15;
+            var timer = setInterval(function() {
+                step++;
+                displayedBalance = Math.round(start + (balance - start) * (step / steps));
+                syncMirrors(displayedBalance);
+                if (step >= steps) { clearInterval(timer); displayedBalance = balance; syncMirrors(balance); }
+            }, 25);
+        }
 
         document.getElementById('btn-bonus').addEventListener('click', function() {
-            if (balance < 100) { updateBalance(balance + 500); vibrate('success'); }
-            else { var btn = document.getElementById('btn-bonus'); btn.innerText = 'Нужно < 100 ₵'; setTimeout(function() { btn.innerText = '+500 бесплатно'; }, 1200); }
+            if (balance < 100) { setBalance(balance + 500, 500); }
+            else {
+                var b = document.getElementById('btn-bonus');
+                b.innerText = 'Нужно < 100';
+                setTimeout(function() { b.innerText = '+500 бесплатно'; }, 1200);
+            }
         });
 
         var busy = false;
-        document.querySelectorAll('.nav-btn').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                if (busy) return;
-                document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active'); });
-                btn.classList.add('active');
-                var tab = btn.getAttribute('data-tab');
-                ['rocket', 'mines', 'slots', 'cascade'].forEach(function(id) { document.getElementById('game-' + id).classList.add('hidden'); });
-                document.getElementById('game-' + tab).classList.remove('hidden');
-            });
-        });
+        function switchGame(id, el) {
+            if (busy) return;
+            var navs = document.querySelectorAll('.nav-btn');
+            for (var i = 0; i < navs.length; i++) navs[i].classList.remove('active');
+            el.classList.add('active');
+            var ids = ['rocket', 'mines', 'slots', 'cascade'];
+            for (var j = 0; j < ids.length; j++) document.getElementById('game-' + ids[j]).classList.add('hidden');
+            document.getElementById('game-' + id).classList.remove('hidden');
+        }
 
-        document.querySelectorAll('.quick-bet').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                if (busy) return;
-                var input = document.getElementById(btn.getAttribute('data-target'));
-                var mult = btn.getAttribute('data-mult');
-                var val = parseInt(input.value) || 100;
-                if (mult === 'max') val = balance; else val = Math.max(10, Math.floor(val * parseFloat(mult)));
-                input.value = Math.min(val, balance);
-            });
-        });
+        function setQuickBet(inputId, val) {
+            if (busy) return;
+            var inp = document.getElementById(inputId);
+            inp.value = val === 'all' ? balance : Math.min(val, balance);
+        }
 
-        var rocketFlying = false, currentMult = 1.00, crashPoint = 1.00, rocketBet = 0, rocketTimer = null;
-        document.getElementById('rocket-btn').addEventListener('click', function() {
-            var btn = document.getElementById('rocket-btn'), multEl = document.getElementById('mult-display'), statusEl = document.getElementById('status-display'), rocketEl = document.getElementById('rocket');
-            if (!rocketFlying) {
+        // ================= 1. РАЗГОН =================
+        var rocketHistory = [1.46, 1.10, 2.20, 1.33, 1.85, 1.04, 3.15];
+        function renderRocketHistory() {
+            var box = document.getElementById('rocket-history');
+            box.innerHTML = '';
+            for (var i = 0; i < rocketHistory.length; i++) {
+                var v = rocketHistory[i];
+                var d = document.createElement('div');
+                d.className = 'hist-pill' + (v >= 2 ? ' epic' : (v >= 1.3 ? ' good' : ''));
+                d.innerText = v.toFixed(2) + 'x';
+                box.appendChild(d);
+            }
+        }
+        renderRocketHistory();
+
+        function drawRocketGraph(progress, crashed) {
+            var c = document.getElementById('rocket-canvas');
+            if (!c) return;
+            var ctx = c.getContext('2d');
+            var w = c.width, h = c.height;
+            ctx.clearRect(0, 0, w, h);
+
+            ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+            ctx.lineWidth = 1;
+            for (var gx = 40; gx < w; gx += 45) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, h); ctx.stroke(); }
+            for (var gy = 35; gy < h; gy += 40) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(w, gy); ctx.stroke(); }
+
+            var startX = 24, startY = h - 24;
+            var endX = startX + (w - 60) * progress;
+            var endY = startY - (h - 55) * Math.pow(progress, 1.35);
+            var ctrlX = startX + (endX - startX) * 0.55;
+            var ctrlY = startY;
+
+            var grad = ctx.createLinearGradient(0, endY, 0, startY);
+            grad.addColorStop(0, crashed ? 'rgba(239,68,68,0.25)' : 'rgba(59,130,246,0.28)');
+            grad.addColorStop(1, 'rgba(17,23,34,0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.quadraticCurveTo(ctrlX, ctrlY, endX, endY);
+            ctx.lineTo(endX, startY);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.strokeStyle = crashed ? '#ef4444' : '#3b82f6';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([6, 4]);
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.quadraticCurveTo(ctrlX, ctrlY, endX, endY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.font = '22px sans-serif';
+            ctx.fillText(crashed ? '💥' : '🚀', endX - 10, endY + 6);
+        }
+        drawRocketGraph(0.02, false);
+
+        var rFlying = false, rMult = 1.00, rCrash = 1.00, rBet = 0, rTimer = null;
+        function toggleRocket() {
+            var btn = document.getElementById('rocket-btn'), mEl = document.getElementById('rocket-mult'), st = document.getElementById('rocket-status');
+            if (!rFlying) {
                 var bet = parseInt(document.getElementById('bet-rocket').value);
-                if (!bet || bet <= 0 || bet > balance) { statusEl.innerText = '⚠️ Не хватает монет!'; return; }
-                updateBalance(balance - bet); rocketBet = bet; rocketFlying = true; busy = true; currentMult = 1.00;
-                var r = Math.random(); crashPoint = r < 0.08 ? 1.00 : Math.min(40, Math.max(1.06, 0.95 / (1 - r)));
-                multEl.className = 'multiplier'; statusEl.innerText = 'Ракета набирает высоту...'; btn.innerText = 'ЗАБРАТЬ (' + bet + ' ₵)'; btn.classList.add('cashout');
-                rocketTimer = setInterval(function() {
-                    currentMult += 0.01 * (currentMult * 0.65);
-                    if (currentMult >= crashPoint) {
-                        clearInterval(rocketTimer); rocketFlying = false; busy = false; multEl.innerText = crashPoint.toFixed(2) + 'x'; multEl.classList.add('crashed');
-                        statusEl.innerText = '💥 Взрыв! Ставка сгорела.'; rocketEl.innerText = '💥'; btn.innerText = 'ЗАПУСТИТЬ РАКЕТУ'; btn.classList.remove('cashout'); vibrate('error');
-                        setTimeout(function() { rocketEl.innerText = '🚀'; rocketEl.style.transform = 'translate(0, 0)'; }, 1200);
+                if (!bet || bet <= 0 || bet > balance) { st.innerText = 'Недостаточно монет!'; return; }
+                setBalance(balance - bet, 0);
+                rBet = bet; rFlying = true; busy = true; rMult = 1.00;
+                var rnd = Math.random();
+                rCrash = rnd < 0.08 ? 1.00 : Math.min(35, Math.max(1.05, 0.94 / (1 - rnd)));
+                mEl.className = 'rocket-mult'; st.innerText = 'В полете...';
+                btn.innerText = 'Забрать (' + bet + ' ₵)'; btn.classList.add('cashout');
+
+                rTimer = setInterval(function() {
+                    rMult += 0.01 * (rMult * 0.6);
+                    var prog = Math.min(1, (rMult - 1) / 3.5);
+                    if (rMult >= rCrash) {
+                        clearInterval(rTimer); rFlying = false; busy = false;
+                        mEl.innerText = rCrash.toFixed(2) + 'x'; mEl.classList.add('crashed');
+                        st.innerText = 'Взрыв на ' + rCrash.toFixed(2) + 'x';
+                        btn.innerText = '⚡ Запустить'; btn.classList.remove('cashout');
+                        drawRocketGraph(prog, true);
+                        rocketHistory.unshift(rCrash); if (rocketHistory.length > 10) rocketHistory.pop();
+                        renderRocketHistory();
                     } else {
-                        multEl.innerText = currentMult.toFixed(2) + 'x'; btn.innerText = 'ЗАБРАТЬ (' + Math.floor(rocketBet * currentMult) + ' ₵)';
-                        rocketEl.style.transform = 'translate(' + Math.min(200, (currentMult - 1) * 45) + 'px, -' + Math.min(120, (currentMult - 1) * 30) + 'px)';
+                        mEl.innerText = rMult.toFixed(2) + 'x';
+                        btn.innerText = 'Забрать (' + Math.floor(rBet * rMult) + ' ₵)';
+                        drawRocketGraph(prog, false);
                     }
                 }, 60);
             } else {
-                clearInterval(rocketTimer); rocketFlying = false; busy = false; var win = Math.floor(rocketBet * currentMult); updateBalance(balance + win);
-                multEl.classList.add('cashed'); statusEl.innerText = '🎉 Успех! Вы забрали ' + win + ' ₵'; btn.innerText = 'ЗАПУСТИТЬ РАКЕТУ'; btn.classList.remove('cashout'); vibrate('success');
-                setTimeout(function() { rocketEl.style.transform = 'translate(0, 0)'; }, 800);
+                clearInterval(rTimer); rFlying = false; busy = false;
+                var win = Math.floor(rBet * rMult);
+                setBalance(balance + win, win);
+                mEl.classList.add('cashed'); st.innerText = 'Вы забрали +' + win + ' ₵!';
+                btn.innerText = '⚡ Запустить'; btn.classList.remove('cashout');
+                rocketHistory.unshift(rMult); if (rocketHistory.length > 10) rocketHistory.pop();
+                renderRocketHistory();
             }
-        });
+        }
 
-        var minesGridEl = document.getElementById('mines-grid'), minesActive = false, minePositions = [], minesBet = 0, gemsFound = 0;
-        function renderEmptyMines() {
-            minesGridEl.innerHTML = '';
+        // ================= 2. МИНЫ =================
+        var minesCount = 3, minesActive = false, minePos = [], mBet = 0, gemsOpen = 0;
+        function setMineCount(cnt, el) {
+            if (minesActive) return;
+            minesCount = cnt;
+            var btns = el.parentElement.querySelectorAll('.pill-btn');
+            for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+            el.classList.add('active');
+        }
+
+        function buildMinesBoard() {
+            var g = document.getElementById('mines-grid');
+            g.innerHTML = '';
             for (var i = 0; i < 25; i++) {
                 (function(idx) {
-                    var cell = document.createElement('div'); cell.className = 'mine-cell'; cell.innerText = '❓';
-                    cell.addEventListener('click', function() { handleMineClick(idx, cell); }); minesGridEl.appendChild(cell);
+                    var t = document.createElement('div');
+                    t.className = 'mine-tile';
+                    t.onclick = function() { clickMineTile(idx, t); };
+                    g.appendChild(t);
                 })(i);
             }
         }
-        renderEmptyMines();
+        buildMinesBoard();
 
-        document.getElementById('mines-btn').addEventListener('click', function() {
-            var btn = document.getElementById('mines-btn'), info = document.getElementById('mines-info');
+        function toggleMines() {
+            var btn = document.getElementById('mines-btn'), st = document.getElementById('mines-status');
             if (!minesActive) {
                 var bet = parseInt(document.getElementById('bet-mines').value);
-                if (!bet || bet <= 0 || bet > balance) { info.innerText = '⚠️ Недостаточно монет!'; return; }
-                updateBalance(balance - bet); minesBet = bet; minesActive = true; busy = true; gemsFound = 0; minePositions = [];
-                while (minePositions.length < 5) { var pos = Math.floor(Math.random() * 25); if (minePositions.indexOf(pos) === -1) minePositions.push(pos); }
-                renderEmptyMines(); info.innerText = 'Открывайте клетки! Множитель: 1.00x'; btn.innerText = 'ЗАБРАТЬ (' + bet + ' ₵)'; btn.classList.add('cashout');
+                if (!bet || bet <= 0 || bet > balance) { st.innerText = 'Недостаточно монет!'; return; }
+                setBalance(balance - bet, 0);
+                mBet = bet; minesActive = true; busy = true; gemsOpen = 0; minePos = [];
+                while (minePos.length < minesCount) {
+                    var p = Math.floor(Math.random() * 25);
+                    if (minePos.indexOf(p) === -1) minePos.push(p);
+                }
+                buildMinesBoard();
+                st.innerText = 'Мин: ' + minesCount + ' • Открывайте клетки!';
+                btn.innerText = 'Забрать (' + bet + ' ₵)'; btn.classList.add('cashout');
             } else {
-                var mult = 1 + (gemsFound * 0.25), win = Math.floor(minesBet * mult); updateBalance(balance + win); minesActive = false; busy = false;
-                info.innerText = '🎉 Вы забрали ' + win + ' ₵ (' + mult.toFixed(2) + 'x)!'; btn.innerText = 'НАЧАТЬ ИГРУ (МИНЫ)'; btn.classList.remove('cashout'); vibrate('success');
-            }
-        });
-
-        function handleMineClick(index, cell) {
-            if (!minesActive || cell.classList.contains('open-gem')) return;
-            var btn = document.getElementById('mines-btn'), info = document.getElementById('mines-info');
-            if (minePositions.indexOf(index) !== -1) {
-                minesActive = false; busy = false; var allCells = minesGridEl.children;
-                minePositions.forEach(function(pos) { allCells[pos].classList.add('open-bomb'); allCells[pos].innerText = '💣'; });
-                info.innerText = '💥 Бум! Вы попали на мину.'; btn.innerText = 'НАЧАТЬ ИГРУ (МИНЫ)'; btn.classList.remove('cashout'); vibrate('error');
-            } else {
-                cell.classList.add('open-gem'); cell.innerText = '💎'; gemsFound++;
-                var mult = 1 + (gemsFound * 0.25), win = Math.floor(minesBet * mult);
-                info.innerText = '💎 Кристаллов: ' + gemsFound + ' • Множитель: ' + mult.toFixed(2) + 'x'; btn.innerText = 'ЗАБРАТЬ (' + win + ' ₵)'; vibrate('success');
+                var mult = 1 + gemsOpen * (0.12 + minesCount * 0.06);
+                var win = Math.floor(mBet * mult);
+                setBalance(balance + win, win);
+                minesActive = false; busy = false;
+                st.innerText = 'Забрали +' + win + ' ₵ (' + mult.toFixed(2) + 'x)';
+                btn.innerText = 'Начать'; btn.classList.remove('cashout');
             }
         }
 
-        var slotSymbols = ['🍒', '🍋', '🍇', '🔔', '💎', '7️⃣'];
-        document.getElementById('slots-btn').addEventListener('click', function() {
-            if (busy) return;
-            var bet = parseInt(document.getElementById('bet-slots').value), info = document.getElementById('slots-info');
-            if (!bet || bet <= 0 || bet > balance) { info.innerText = '⚠️ Недостаточно монет!'; return; }
-            updateBalance(balance - bet); busy = true; info.innerText = 'Барабаны крутятся...';
-            var ticks = 0, spinTimer = setInterval(function() {
-                document.getElementById('reel-1').innerText = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
-                document.getElementById('reel-2').innerText = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
-                document.getElementById('reel-3').innerText = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
-                ticks++;
-                if (ticks > 12) {
-                    clearInterval(spinTimer); busy = false;
-                    var r1 = document.getElementById('reel-1').innerText, r2 = document.getElementById('reel-2').innerText, r3 = document.getElementById('reel-3').innerText;
-                    if (r1 === r2 && r2 === r3) { var win = bet * 10; updateBalance(balance + win); info.innerText = '🔥 ДЖЕКПОТ x10! Выигрыш: ' + win + ' ₵'; vibrate('success'); }
-                    else if (r1 === r2 || r2 === r3 || r1 === r3) { var win2 = bet * 2; updateBalance(balance + win2); info.innerText = '✨ Совпадение x2! Выигрыш: ' + win2 + ' ₵'; vibrate('success'); }
-                    else { info.innerText = 'Нет совпадений. Попробуйте еще раз!'; }
-                }
-            }, 80);
-        });
+        function clickMineTile(idx, tile) {
+            if (!minesActive || tile.classList.contains('flipped')) return;
+            var btn = document.getElementById('mines-btn'), st = document.getElementById('mines-status');
+            tile.classList.add('flipped');
 
-                var cascadeIcons = ['🍎', '🍊', '🍇', '💎', '⭐'], cascadeGridEl = document.getElementById('cascade-grid'), cascadeBoard = [];
-        function fillCascadeBoard() {
-            cascadeGridEl.innerHTML = ''; cascadeBoard = [];
-            for (var i = 0; i < 20; i++) {
-                var icon = cascadeIcons[Math.floor(Math.random() * cascadeIcons.length)]; cascadeBoard.push(icon);
-                var cell = document.createElement('div'); cell.className = 'cascade-cell'; cell.innerText = icon; cascadeGridEl.appendChild(cell);
+            if (minePos.indexOf(idx) !== -1) {
+                minesActive = false; busy = false;
+                var all = document.getElementById('mines-grid').children;
+                for (var i = 0; i < minePos.length; i++) {
+                    all[minePos[i]].classList.add('flipped', 'bomb');
+                    all[minePos[i]].innerText = '💣';
+                }
+                st.innerText = 'Бум! Попалась мина.';
+                btn.innerText = 'Начать'; btn.classList.remove('cashout');
+            } else {
+                tile.classList.add('gem');
+                tile.innerText = '💎';
+                gemsOpen++;
+                var mult = 1 + gemsOpen * (0.12 + minesCount * 0.06);
+                var win = Math.floor(mBet * mult);
+                st.innerText = 'Кристаллов: ' + gemsOpen + ' • Множитель: ' + mult.toFixed(2) + 'x';
+                btn.innerText = 'Забрать (' + win + ' ₵)';
             }
         }
-        fillCascadeBoard();
 
-        document.getElementById('cascade-btn').addEventListener('click', function() {
+        // ================= 3. СЛОТЫ 5x3 =================
+        var sIcons = ['🍒', '🍋', '🍇', '🔔', '💎', '7️⃣'];
+        var sCells = [];
+        function initSlotsGrid() {
+            var g = document.getElementById('slots-grid');
+            g.innerHTML = ''; sCells = [];
+            for (var i = 0; i < 15; i++) {
+                var c = document.createElement('div');
+                c.className = 'slot-cell';
+                c.innerText = sIcons[i % sIcons.length];
+                g.appendChild(c); sCells.push(c);
+            }
+        }
+        initSlotsGrid();
+
+        function spinSlots() {
             if (busy) return;
-            var bet = parseInt(document.getElementById('bet-cascade').value), info = document.getElementById('cascade-info');
-            if (!bet || bet <= 0 || bet > balance) { info.innerText = '⚠️ Недостаточно монет!'; return; }
-            updateBalance(balance - bet); busy = true; var totalWin = 0, combo = 1;
-            function runCascadeStep() {
-                fillCascadeBoard(); var counts = {};
-                cascadeBoard.forEach(function(sym) { counts[sym] = (counts[sym] || 0) + 1; });
-                var matchedSym = null;
-                for (var sym in counts) { if (counts[sym] >= 5) { matchedSym = sym; break; } }
-                if (matchedSym) {
-                    var stepWin = Math.floor(bet * 0.8 * combo); totalWin += stepWin;
-                    Array.from(cascadeGridEl.children).forEach(function(cell, idx) { if (cascadeBoard[idx] === matchedSym) cell.classList.add('pop'); });
-                    info.innerText = '💥 Каскад x' + combo + '! Собрано ' + counts[matchedSym] + 'x ' + matchedSym + ' (+' + stepWin + ' ₵)';
-                    combo++; vibrate('success'); setTimeout(runCascadeStep, 700);
-                } else {
-                    busy = false;
-                    if (totalWin > 0) { updateBalance(balance + totalWin); info.innerText = '🎉 Серия завершена! Общий выигрыш: ' + totalWin + ' ₵'; }
-                    else { info.innerText = 'Кластеров от 5 символов не выпало.'; }
+            var bet = parseInt(document.getElementById('bet-slots').value);
+            var st = document.getElementById('slots-status');
+            if (!bet || bet <= 0 || bet > balance) { st.innerText = 'Недостаточно монет!'; return; }
+            setBalance(balance - bet, 0);
+            busy = true; st.innerText = 'Барабаны крутятся...';
+
+            for (var k = 0; k < 15; k++) { sCells[k].classList.remove('win-cell'); sCells[k].classList.add('spinning'); }
+
+            var colStopped = [false, false, false, false, false];
+            var board = new Array(15);
+
+            for (var col = 0; col < 5; col++) {
+                (function(cIdx) {
+                    setTimeout(function() {
+                        colStopped[cIdx] = true;
+                        for (var r = 0; r < 3; r++) {
+                            var idx = r * 5 + cIdx;
+                            var sym = sIcons[Math.floor(Math.random() * sIcons.length)];
+                            board[idx] = sym;
+                            sCells[idx].innerText = sym;
+                            sCells[idx].classList.remove('spinning');
+                        }
+                        if (cIdx === 4) { clearInterval(spinAnim); checkSlotLines(board, bet); }
+                    }, 350 + cIdx * 220);
+                })(col);
+            }
+
+            var spinAnim = setInterval(function() {
+                for (var col = 0; col < 5; col++) {
+                    if (!colStopped[col]) {
+                        for (var r = 0; r < 3; r++) {
+                            sCells[r * 5 + col].innerText = sIcons[Math.floor(Math.random() * sIcons.length)];
+                        }
+                    }
+                }
+            }, 60);
+        }
+
+        function checkSlotLines(b, bet) {
+            busy = false;
+            var st = document.getElementById('slots-status');
+            var lines = [
+                [0, 1, 2, 3, 4],
+                [5, 6, 7, 8, 9],
+                [10, 11, 12, 13, 14],
+                [0, 6, 12, 8, 4],
+                [10, 6, 2, 8, 14]
+            ];
+            var totalMult = 0;
+            for (var l = 0; l < lines.length; l++) {
+                var line = lines[l];
+                var first = b[line[0]];
+                var match = 1;
+                for (var i = 1; i < 5; i++) {
+                    if (b[line[i]] === first) match++; else break;
+                }
+                if (match >= 3) {
+                    totalMult += (match === 5 ? 15 : (match === 4 ? 5 : 2));
+                    for (var m = 0; m < match; m++) sCells[line[m]].classList.add('win-cell');
                 }
             }
-            runCascadeStep();
-        });
+            if (totalMult > 0) {
+                var win = bet * totalMult;
+                setBalance(balance + win, win);
+                st.innerText = 'Выигрыш по линиям: +' + win + ' ₵ (' + totalMult + 'x)!';
+            } else {
+                st.innerText = 'Нет комбинаций из 3+ символов.';
+            }
+        }
+
+        // ================= 4. КАСКАД (ПИРАМИДКА) =================
+        var pRows = 8, pRisk = 'low', pCount = 1, pBalls = [];
+        var pMults = {
+            8:  { low: [5.5, 2.8, 1.44, 0.8, 0.49, 0.8, 1.44, 2.8, 5.5], high: [18, 4.0, 1.5, 0.5, 0.2, 0.5, 1.5, 4.0, 18] },
+            10: { low: [8.9, 3.0, 1.4, 1.1, 0.8, 0.5, 0.8, 1.1, 1.4, 3.0, 8.9], high: [35, 8.0, 2.5, 0.9, 0.4, 0.2, 0.4, 0.9, 2.5, 8.0, 35] },
+            12: { low: [14, 4.5, 2.0, 1.4, 1.1, 0.8, 0.5, 0.8, 1.1, 1.4, 2.0, 4.5, 14], high: [60, 15, 4.0, 1.5, 0.6, 0.3, 0.2, 0.3, 0.6, 1.5, 4.0, 15, 60] }
+        };
+
+        function setPlinkoRows(r, el) {
+            if (pBalls.length > 0) return;
+            pRows = r;
+            var bs = el.parentElement.querySelectorAll('.pill-btn');
+            for (var i = 0; i < 3; i++) bs[i].classList.remove('active');
+            el.classList.add('active');
+            renderPBuckets();
+        }
+        function setPlinkoRisk(rk) {
+            if (pBalls.length > 0) return;
+            pRisk = rk;
+            document.getElementById('risk-low-btn').classList.toggle('active', rk === 'low');
+            document.getElementById('risk-high-btn').classList.toggle('active', rk === 'high');
+            renderPBuckets();
+        }
+        function setPlinkoCount(cnt, el) {
+            pCount = cnt;
+            var bs = el.parentElement.querySelectorAll('.pill-btn');
+            for (var i = 0; i < bs.length; i++) bs[i].classList.remove('active');
+            el.classList.add('active');
+        }
+
+        function renderPBuckets() {
+            var box = document.getElementById('plinko-buckets');
+            box.innerHTML = '';
+            var arr = pMults[pRows][pRisk];
+            for (var i = 0; i < arr.length; i++) {
+                var d = document.createElement('div');
+                d.id = 'pb-' + i; d.className = 'bucket';
+                var m = arr[i];
+                d.style.background = m >= 4 ? '#ef4444' : (m >= 1.4 ? '#f59e0b' : (m >= 0.8 ? '#10b981' : '#334155'));
+                d.innerText = m;
+                box.appendChild(d);
+            }
+        }
+        renderPBuckets();
+
+        function dropPlinkoVolley() {
+            var bet = parseInt(document.getElementById('bet-cascade').value);
+            var st = document.getElementById('plinko-status');
+            var totalCost = bet * pCount;
+            if (!bet || bet <= 0 || totalCost > balance) { st.innerText = 'Нужно ' + totalCost + ' ₵ для запуска ' + pCount + ' ш.!'; return; }
+            setBalance(balance - totalCost, 0);
+
+            for (var n = 0; n < pCount; n++) {
+                setTimeout(function() {
+                    var path = [], bkt = 0;
+                    for (var r = 0; r < pRows; r++) { var d = Math.random() < 0.5 ? 0 : 1; path.push(d); bkt += d; }
+                    pBalls.push({ bet: bet, path: path, bucket: bkt, prog: 0 });
+                }, n * 160);
+            }
+        }
+
+        function loopPlinko() {
+            var c = document.getElementById('plinko-canvas');
+            if (c) {
+                var ctx = c.getContext('2d'), w = c.width, h = c.height;
+                ctx.clearRect(0, 0, w, h);
+                var topY = 18, botY = h - 10, stepY = (botY - topY) / pRows, spX = w / (pRows + 2.8);
+
+                ctx.fillStyle = '#e2e8f0';
+                for (var r = 0; r < pRows; r++) {
+                    var pins = r + 3, y = topY + r * stepY, sx = (w - (pins - 1) * spX) / 2;
+                    for (var col = 0; col < pins; col++) {
+                        ctx.beginPath(); ctx.arc(sx + col * spX, y, 2.6, 0, Math.PI * 2); ctx.fill();
+                    }
+                }
+
+                for (var i = pBalls.length - 1; i >= 0; i--) {
+                    var b = pBalls[i];
+                    b.prog += 0.14;
+                    var row = Math.floor(b.prog), fr = b.prog - row;
+                    if (row >= pRows) {
+                        var mult = pMults[pRows][pRisk][b.bucket];
+                        var win = Math.floor(b.bet * mult);
+                        if (win > 0) setBalance(balance + win, win);
+                        document.getElementById('plinko-status').innerText = 'Лунка ' + mult + 'x → +' + win + ' ₵';
+                        var el = document.getElementById('pb-' + b.bucket);
+                        if (el) { el.style.transform = 'scale(1.25)'; setTimeout((function(e){ return function(){ e.style.transform = 'scale(1)'; }; })(el), 180); }
+                        pBalls.splice(i, 1);
+                        continue;
+                    }
+                    var rSteps = 0;
+                    for (var k = 0; k < row; k++) rSteps += b.path[k];
+                    var nSteps = rSteps + b.path[row];
+                    var x1 = (w / 2) + (rSteps - row / 2) * spX;
+                    var x2 = (w / 2) + (nSteps - (row + 1) / 2) * spX;
+                    var bx = x1 + (x2 - x1) * fr;
+                    var by = topY + (row + fr) * stepY - Math.sin(fr * Math.PI) * 5;
+
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.beginPath(); ctx.arc(bx, by, 5, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+            requestAnimationFrame(loopPlinko);
+        }
+        loopPlinko();
     </script>
 </body>
 </html>
-
-
-
