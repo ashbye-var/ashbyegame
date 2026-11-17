@@ -102,6 +102,39 @@
         .wheel-hub { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 38px; height: 38px; background: var(--panel); border: 3px solid var(--yellow); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; color: var(--yellow); box-shadow: 0 2px 8px rgba(0,0,0,0.6); }
 
         .status-line { text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); min-height: 18px; margin-top: 6px; }
+
+        /* Кнопка «Отработка возражений» */
+        .quest-btn { background: rgba(139, 92, 246, 0.16); color: #ddd6fe; border: 1px solid var(--purple); padding: 6px 10px; border-radius: 8px; font-weight: 700; font-size: 11px; cursor: pointer; white-space: nowrap; }
+
+        /* Окно «Отработка возражений» */
+        .quest-view { position: fixed; inset: 0; background: var(--bg); z-index: 50; display: flex; flex-direction: column; padding: 12px; overflow-y: auto; }
+        .quest-topbar { display: flex; align-items: center; justify-content: space-between; background: var(--panel); padding: 12px 14px; border-radius: 14px; margin-bottom: 10px; border: 1px solid var(--tile-border); }
+        .quest-title { font-size: 15px; font-weight: 800; color: var(--text); }
+        .quest-back { width: 38px; height: 38px; border-radius: 10px; background: var(--tile); border: 1px solid var(--tile-border); color: var(--text); font-size: 20px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .quest-back:active { transform: scale(0.94); }
+        .quest-body { flex-grow: 1; display: flex; flex-direction: column; }
+        .quest-intro { font-size: 12px; color: var(--muted); background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.35); padding: 10px 12px; border-radius: 10px; margin-bottom: 12px; line-height: 1.5; }
+        .quest-intro b { color: var(--yellow); }
+        .quest-card { background: var(--panel); border: 1px solid var(--tile-border); border-radius: 14px; padding: 14px; margin-bottom: 10px; cursor: pointer; transition: 0.15s; }
+        .quest-card:active { transform: scale(0.98); }
+        .quest-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+        .quest-card-emoji { font-size: 26px; }
+        .quest-card-title { font-size: 15px; font-weight: 800; }
+        .quest-card-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+        .quest-step-ind { text-align: center; font-size: 12px; font-weight: 800; color: var(--muted); margin-bottom: 10px; }
+        .client-bubble { background: var(--panel); border: 1px solid var(--tile-border); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+        .client-name { font-size: 12px; font-weight: 800; color: var(--yellow); margin-bottom: 6px; }
+        .client-msg { font-size: 14px; line-height: 1.55; color: var(--text); }
+        .q-options { display: flex; flex-direction: column; gap: 8px; }
+        .q-opt { background: var(--tile); border: 1px solid var(--tile-border); color: var(--text); padding: 12px 14px; border-radius: 12px; font-size: 13px; line-height: 1.45; text-align: left; cursor: pointer; transition: 0.15s; }
+        .q-opt:active { transform: scale(0.98); border-color: var(--purple); background: rgba(139, 92, 246, 0.15); }
+        .quest-result { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        .quest-result-emoji { font-size: 60px; margin-bottom: 12px; }
+        .quest-result-title { font-size: 22px; font-weight: 900; margin-bottom: 8px; }
+        .quest-result-title.win { color: var(--green); }
+        .quest-result-title.lose { color: var(--red); }
+        .quest-result-sub { font-size: 14px; color: var(--muted); line-height: 1.5; margin-bottom: 18px; }
+        .quest-result-reward { font-size: 16px; font-weight: 800; color: var(--yellow); margin-bottom: 18px; }
     </style>
 </head>
 <body>
@@ -112,7 +145,7 @@
             <span id="balance">1000</span>
             <span id="win-float" class="win-float">+0</span>
         </div>
-        <button type="button" id="btn-bonus" class="bonus-btn">+500 бесплатно</button>
+        <button type="button" id="btn-quests" class="quest-btn" onclick="openQuests()">💼 Отработка возражений</button>
     </div>
 
     <div class="nav">
@@ -264,6 +297,38 @@
         </div>
     </div>
 
+    <!-- ОКНО «ОТРАБОТКА ВОЗРАЖЕНИЙ» -->
+    <div id="quest-view" class="quest-view hidden">
+        <div class="quest-topbar">
+            <div class="quest-title">💼 Отработка возражений</div>
+            <button type="button" class="quest-back" onclick="closeQuest()" title="На главную">←</button>
+        </div>
+
+        <div id="quest-list" class="quest-body">
+            <div class="quest-intro">Ты — менеджер по продажам тарифов. Выбери ситуацию и отработай возражения клиента. Отработаешь все 3 шага верно — получишь <b>10 000 ₵</b>. Одна ошибка — клиент уходит без продажи.</div>
+            <div id="quest-cards"></div>
+        </div>
+
+        <div id="quest-play" class="quest-body hidden">
+            <div class="quest-step-ind">Шаг <span id="q-step-num">1</span> / 3</div>
+            <div class="client-bubble">
+                <div class="client-name" id="q-client">Клиент</div>
+                <div class="client-msg" id="q-msg"></div>
+            </div>
+            <div class="q-options" id="q-options"></div>
+        </div>
+
+        <div id="quest-result" class="quest-body hidden">
+            <div class="quest-result">
+                <div class="quest-result-emoji" id="q-result-emoji"></div>
+                <div class="quest-result-title" id="q-result-title"></div>
+                <div class="quest-result-sub" id="q-result-sub"></div>
+                <div class="quest-result-reward hidden" id="q-result-reward"></div>
+                <button type="button" class="main-btn" id="q-result-btn" onclick="backToQuestList()"></button>
+            </div>
+        </div>
+    </div>
+
     <script>
         var tg = null;
         try { if (window.Telegram && window.Telegram.WebApp) { tg = window.Telegram.WebApp; tg.ready(); tg.expand(); } } catch (e) {}
@@ -303,14 +368,19 @@
             }, 25);
         }
 
-        document.getElementById('btn-bonus').addEventListener('click', function() {
-            if (balance < 100) { setBalance(balance + 500, 500); }
-            else {
-                var b = document.getElementById('btn-bonus');
-                b.innerText = 'Нужно < 100';
-                setTimeout(function() { b.innerText = '+500 бесплатно'; }, 1200);
-            }
-        });
+        // Отработка возражений — открытие окна квестов
+        function openQuests() {
+            if (busy) return;
+            renderQuestCards();
+            document.getElementById('quest-list').classList.remove('hidden');
+            document.getElementById('quest-play').classList.add('hidden');
+            document.getElementById('quest-result').classList.add('hidden');
+            document.getElementById('quest-view').classList.remove('hidden');
+        }
+
+        function closeQuest() {
+            document.getElementById('quest-view').classList.add('hidden');
+        }
 
         var busy = false;
         function switchGame(id, el) {
@@ -904,6 +974,220 @@
                 st.innerText = '🎉 Вы выиграли +' + prize + ' ₵ в Колесе Фортуны!';
                 updateWheelTimer();
             }, 4300);
+        }
+
+        // ================= ОТРАБОТКА ВОЗРАЖЕНИЙ =================
+        var QUESTS = [
+            {
+                id: 'tv',
+                emoji: '📺',
+                title: 'Отказ от ТВ',
+                desc: 'Клиент хочет только интернет, без телевидения. Уговори его на пакет «Интернет + ТВ».',
+                client: 'Андрей',
+                steps: [
+                    {
+                        msg: 'Мне нужен просто интернет, без телевидения. Телевизор я вообще не смотрю — только ноутбук и телефон.',
+                        options: [
+                            'Понимаю, сейчас многие обходятся без ТВ. Но в пакете «Интернет + ТВ» разница всего ~100 ₽ в месяц, а у вас будут 233 канала и онлайн-кинотеатр KION — если вдруг понадобится, уже будет подключено.',
+                            'Как это не смотрите? Сейчас без телевидения никак, тем более у нас 233 канала в HD и кинотеатр KION в подарок.',
+                            'Хорошо, тогда оформим только интернет, без ТВ — так даже дешевле.'
+                        ],
+                        correct: 0
+                    },
+                    {
+                        msg: 'Да мне этот KION не нужен, я в свободное время в интернете сижу. Зачем платить за то, чем не пользуюсь?',
+                        options: [
+                            'Согласен, лишнее не нужно. А подскажите, семья у вас есть? Если да — дети или супруга точно что-то смотрят, и ТВ в пакете выйдет вам почти бесплатно.',
+                            'Ну и зря, KION — лучший кинотеатр, куча новых фильмов и сериалов. Все сейчас подключают.',
+                            'Платить не придётся — первые 2 месяца ТВ вообще бесплатно, а потом можно просто отключить.'
+                        ],
+                        correct: 0
+                    },
+                    {
+                        msg: 'Ну семья есть, но всё равно сомневаюсь. Мне главное, чтобы интернет был стабильный и без переплат.',
+                        options: [
+                            'Понимаю ваше сомнение. Интернет у нас 500 Мбит/с и работает стабильно, а пакет с ТВ в итоге дешевле, чем брать всё по отдельности. Давайте оформлю «Интернет + ТВ» — если через месяц поймёте, что ТВ не нужно, тариф всегда можно сменить.',
+                            'Да вы не сомневайтесь, все так подключают, это самое выгодное предложение на рынке.',
+                            'Хорошо, раз сомневаетесь — оформлю только интернет, а если передумаете, ТВ отдельно выйдет дороже.'
+                        ],
+                        correct: 0
+                    }
+                ],
+                win: 'Клиент согласился на пакет «Интернет + ТВ»! Продажа оформлена.',
+                lose: 'Клиент отказался и пошёл сравнивать у конкурентов.'
+            },
+            {
+                id: 'sim',
+                emoji: '📱',
+                title: 'Отказ от СИМ-карты',
+                desc: 'Клиент хочет интернет + ТВ, но не хочет СИМ-карту. Продай пакет целиком с мобильной связью.',
+                client: 'Марина',
+                steps: [
+                    {
+                        msg: 'СИМ-карта мне не нужна, у меня уже есть свой оператор и всё устраивает. Подключите просто интернет и телевизор.',
+                        options: [
+                            'Конечно, вашу текущую связь никто не трогает. Подскажите, а сколько вы сейчас платите за мобильную связь? Возможно, наша СИМ выйдет вам дешевле или вообще без доплаты.',
+                            'Зачем вам старый оператор? У нас связь лучше, и в пакете СИМ идёт с большой скидкой — вы только экономите.',
+                            'Хорошо, уберём СИМ из пакета, подключим только интернет и ТВ.'
+                        ],
+                        correct: 0
+                    },
+                    {
+                        msg: 'Я плачу за мобильную связь 600 рублей. Но менять номер и оператора не хочу — всё и так работает.',
+                        options: [
+                            'Понимаю, привычный номер — это важно. Но номер можно оставить свой: мы сделаем перенос, и вы продолжите пользоваться им, просто на нашем тарифе, где связь уже включена в пакет.',
+                            '600 рублей — это дорого! У нас в пакете безлимитный интернет и 2000 минут, вы явно переплачиваете, надо менять.',
+                            'Ну тогда оставайтесь на своём операторе, но без СИМ скидка на пакет сгорит и выйдет дороже.'
+                        ],
+                        correct: 0
+                    },
+                    {
+                        msg: 'А перенос — это долго и муторно? Не хочется остаться без связи.',
+                        options: [
+                            'Не беспокойтесь, перенос занимает обычно 8–11 дней, и всё это время ваш старый номер работает — связь не пропадёт ни на минуту. Я всё оформлю, вам нужно будет только один раз подтвердить.',
+                            'Да нет, это две секунды: просто подпишете бумагу — и на следующий день всё готово.',
+                            'Ну если для вас это сложно, тогда пропустим перенос, но вы потеряете выгоду пакета.'
+                        ],
+                        correct: 0
+                    }
+                ],
+                win: 'Клиент согласился на полный пакет с СИМ-картой и переносом номера!',
+                lose: 'Клиент остался на своём операторе и отказался от СИМ.'
+            },
+            {
+                id: 'mts',
+                emoji: '🔁',
+                title: 'Перенос номера на МТС',
+                desc: 'Клиент сравнивает провайдеров и не хочет переносить номер. Уговори его на «МТС Дома Супер» с переносом.',
+                client: 'Дмитрий',
+                steps: [
+                    {
+                        msg: 'Я сравниваю вас с Ростелекомом и Билайном — условия похожие. И номер переносить не хочу, к нему привязаны банк и работа.',
+                        options: [
+                            'Понимаю, выбор важный. При переносе номер остаётся вашим — все звонки, СМС и банк работают как раньше. А по тарифу я сравню: в «МТС Дома Супер» скорость до 500 Мбит/с, 233 канала и мобильная связь уже включены в одну цену.',
+                            'Другие провайдеры хуже, у них нет таких скоростей и каналов, как у МТС. Выбирайте нас, не сомневайтесь.',
+                            'Ну смотрите, если не хотите переносить — ваше право, но тогда я ничем не смогу помочь.'
+                        ],
+                        correct: 0
+                    },
+                    {
+                        msg: 'Ну допустим. А что мне конкретно даст перенос номера? Я и так всем могу сообщить новый номер.',
+                        options: [
+                            'Главное — не придётся никому сообщать и менять номер в банке, госуслугах и приложениях. Плюс при переносе вы получаете мобильную связь в составе пакета: безлимитный интернет, 2000 минут и 50 СМС уже включены.',
+                            'Перенос даёт скидку 100 рублей, поэтому это выгодно — не раздумывайте.',
+                            'Вообще перенос не обязателен, можно и новый номер взять, разницы никакой нет.'
+                        ],
+                        correct: 0
+                    },
+                    {
+                        msg: 'Звучит неплохо. Но вдруг у МТС в моём доме плохая связь? Я слышал разные отзывы.',
+                        options: [
+                            'Хороший вопрос. Давайте я проверю покрытие по вашему адресу прямо сейчас — если сеть есть, подключим. А если вдруг что-то не так, вы ничего не теряете: перенос отменяется одной заявкой, и номер остаётся у текущего оператора.',
+                            'Да не слушайте отзывы, у нас отличная связь везде, просто люди завидуют.',
+                            'Ну если боитесь, тогда не переносим — оставайтесь на своём операторе.'
+                        ],
+                        correct: 0
+                    }
+                ],
+                win: 'Клиент согласился на «МТС Дома Супер» и оформил перенос номера!',
+                lose: 'Клиент ушёл к другому провайдеру.'
+            }
+        ];
+
+        var questState = null;
+
+        function renderQuestCards() {
+            var box = document.getElementById('quest-cards');
+            box.innerHTML = '';
+            for (var i = 0; i < QUESTS.length; i++) {
+                (function(idx) {
+                    var q = QUESTS[idx];
+                    var card = document.createElement('div');
+                    card.className = 'quest-card';
+                    card.innerHTML = '<div class="quest-card-head"><div class="quest-card-emoji">' + q.emoji + '</div><div class="quest-card-title">' + q.title + '</div></div><div class="quest-card-desc">' + q.desc + '</div>';
+                    card.onclick = function() { startQuest(idx); };
+                    box.appendChild(card);
+                })(i);
+            }
+        }
+
+        function startQuest(idx) {
+            questState = { idx: idx, step: 0, mistakes: 0 };
+            document.getElementById('quest-list').classList.add('hidden');
+            document.getElementById('quest-result').classList.add('hidden');
+            document.getElementById('quest-play').classList.remove('hidden');
+            renderQuestStep();
+        }
+
+        function renderQuestStep() {
+            var q = QUESTS[questState.idx];
+            var s = q.steps[questState.step];
+            document.getElementById('q-step-num').innerText = questState.step + 1;
+            document.getElementById('q-client').innerText = q.client;
+            document.getElementById('q-msg').innerText = s.msg;
+
+            var box = document.getElementById('q-options');
+            box.innerHTML = '';
+            for (var i = 0; i < s.options.length; i++) {
+                (function(oi) {
+                    var b = document.createElement('button');
+                    b.type = 'button';
+                    b.className = 'q-opt';
+                    b.innerText = s.options[oi];
+                    b.onclick = function() { chooseQuestOption(oi); };
+                    box.appendChild(b);
+                })(i);
+            }
+        }
+
+        function chooseQuestOption(i) {
+            var q = QUESTS[questState.idx];
+            var s = q.steps[questState.step];
+            if (i !== s.correct) questState.mistakes++;
+            questState.step++;
+            if (questState.step < q.steps.length) {
+                renderQuestStep();
+            } else {
+                finishQuest();
+            }
+        }
+
+        function finishQuest() {
+            var q = QUESTS[questState.idx];
+            var perfect = questState.mistakes === 0;
+            document.getElementById('quest-play').classList.add('hidden');
+            document.getElementById('quest-result').classList.remove('hidden');
+
+            var emoji = document.getElementById('q-result-emoji');
+            var title = document.getElementById('q-result-title');
+            var sub = document.getElementById('q-result-sub');
+            var reward = document.getElementById('q-result-reward');
+            var btn = document.getElementById('q-result-btn');
+
+            if (perfect) {
+                setBalance(balance + 10000, 10000);
+                emoji.innerText = '🎉';
+                title.innerText = 'Продажа! +10 000 ₵';
+                title.className = 'quest-result-title win';
+                sub.innerText = q.win;
+                reward.classList.remove('hidden');
+                reward.innerText = 'Монеты начислены на баланс';
+                btn.innerText = 'Отлично, к списку ситуаций';
+            } else {
+                emoji.innerText = '😔';
+                title.innerText = 'Клиент отказался';
+                title.className = 'quest-result-title lose';
+                sub.innerText = q.lose;
+                reward.classList.add('hidden');
+                btn.innerText = 'Попробовать снова';
+            }
+        }
+
+        function backToQuestList() {
+            renderQuestCards();
+            document.getElementById('quest-play').classList.add('hidden');
+            document.getElementById('quest-result').classList.add('hidden');
+            document.getElementById('quest-list').classList.remove('hidden');
         }
     </script>
 </body>
